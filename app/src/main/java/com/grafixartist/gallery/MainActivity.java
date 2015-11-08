@@ -72,15 +72,19 @@ public class MainActivity extends AppCompatActivity {
         String PathOfImage;
         uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
-        String[] projection = {MediaStore.MediaColumns.DATA};
+        String[] projection = {MediaStore.MediaColumns.DATA,
+                               MediaStore.MediaColumns.DISPLAY_NAME,
+                               MediaStore.MediaColumns.DATE_ADDED
+                              };
 
-        cursor = activity.getContentResolver().query(uri, projection, null, null, null);
+        cursor = activity.getContentResolver().query(uri, projection, null, null, MediaStore.Images.Media.DATE_TAKEN + " DESC");
 
         column_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
         while (cursor.moveToNext()) {
             PathOfImage = cursor.getString(column_index_data);
             listOfAllImages.add(PathOfImage);
         }
+        //close(cursor);
         return listOfAllImages;
     }
 

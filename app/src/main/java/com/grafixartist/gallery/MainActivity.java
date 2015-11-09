@@ -34,8 +34,12 @@ public class MainActivity extends AppCompatActivity {
 
     ArrayList<ImageModel> data = new ArrayList<>();
 
+    private DatabaseHelper dh;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        this.dh = new DatabaseHelper(this);
+
         super.onCreate(savedInstanceState);
         Log.i(TAG, "onCreate() called");
         setContentView(R.layout.activity_main);
@@ -46,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
             ImageModel imageModel = new ImageModel();
             imageModel.setName(IMGS.get(i).getName());
             imageModel.setUrl(IMGS.get(i).getPath());
+            dh.insertPhoto(IMGS.get(i).getPath(), IMGS.get(i).getName(), IMGS.get(i).getDateTaken(), IMGS.get(i).getSize());
             data.add(imageModel);
         }
 

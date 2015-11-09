@@ -20,19 +20,30 @@ public class DatabaseHelper {
     private Context context;
     private SQLiteDatabase db;
     private SQLiteStatement insertStmt;
-    private static final String INSERT = "insert into " + ACCOUNTS_TABLE + "(email, password) values (?, ?)" ;
+    private SQLiteStatement insertPhotoStmt;
+    private static final String INSERT_PHOTO = "insert into " + ACCOUNTS_TABLE + "(path, filename, date, size) values (?, ?, ?, ?)" ;
+    private static final String INSERT = "insert into " + PHOTOS_TABLE + "(email, password) values (?, ?)" ;
 
     public DatabaseHelper(Context context) {
         this.context = context;
         GalleryOpenHelper openHelper = new GalleryOpenHelper(this.context);
         this.db = openHelper.getWritableDatabase();
         this.insertStmt = this.db.compileStatement(INSERT);
+        this.insertPhotoStmt = this.db.compileStatement(INSERT_PHOTO);
     }
 
     public long insert(String email, String password) {
         this.insertStmt.bindString(1, email);
         this.insertStmt.bindString(2, password);
         return this.insertStmt.executeInsert();
+    }
+
+    public long insertPhoto(String path, String filename, String date, String size){
+        this.insertPhotoStmt.bindString(1, path);
+        this.insertPhotoStmt.bindString(2, filename);
+        this.insertPhotoStmt.bindString(3, date);
+        this.insertPhotoStmt.bindString(4, size);
+        return this.insertPhotoStmt.executeInsert();
     }
 
     public void deleteAll() {
@@ -43,7 +54,7 @@ public class DatabaseHelper {
         // Check if pin lock
         List<String> list = new ArrayList<>();
         boolean result = false;
-        Cursor cursor = this.db.query(PHOTOS_TABLE, new String[] { "path, pinlock" }, "path = '" + filePath + "'", null, null, null, "path desc");
+        Cursor cursor = this.db.query(PHOTOS_TABLE, new String[] { "path, pinlock" }, "path = '" + filePath + "'", null, null, null, null);
         if (cursor.moveToFirst()) {
             do {
                 list.add(cursor.getString(0));
@@ -57,6 +68,10 @@ public class DatabaseHelper {
 
         }
         return result;
+    }
+
+    public boolean checkLocLock(String filePath) {
+        return false;
     }
 
     public boolean checkUsernameExists(String email) {

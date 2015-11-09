@@ -45,8 +45,26 @@ public class DatabaseHelper {
         this.db.delete(TABLE_NAME, null, null);
     }
 
+    public boolean checkUsernameExists(String username) {
+        List<String> list = new ArrayList<>();
+        boolean result = false;
+        Cursor cursor = this.db.query(TABLE_NAME, new String[]{"name"}, "name = '" + username + "'", null, null, null, "name desc");
+        if (cursor.moveToFirst()) {
+            do {
+                list.add(cursor.getString(0));
+            } while (cursor.moveToNext());
+        }
+        if (!cursor.isClosed()) {
+            cursor.close();
+        }
+        if (!list.isEmpty()) {
+            result = true;
+        }
+        return result;
+    }
+
     public List<String> selectAll(String username, String password) {
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         Cursor cursor = this.db.query(TABLE_NAME, new String[] { "name", "password" }, "name = '"+ username +"' AND password= '"+ password+"'", null, null, null, "name desc");
         if (cursor.moveToFirst()) {
             do {
@@ -54,7 +72,7 @@ public class DatabaseHelper {
                 list.add(cursor.getString(1));
             } while (cursor.moveToNext());
         }
-        if (cursor != null && !cursor.isClosed()) {
+        if (!cursor.isClosed()) {
             cursor.close();
         }
         return list;

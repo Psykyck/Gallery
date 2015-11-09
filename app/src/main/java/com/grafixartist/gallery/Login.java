@@ -9,6 +9,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -22,7 +23,7 @@ import java.util.List;
 // import android.app.FragmentManager;
 // import android.app.FragmentActivity; 
 
-public class Login extends FragmentActivity implements android.view.View.OnClickListener{
+public class Login extends FragmentActivity implements View.OnClickListener {
    private DatabaseHelper dh;
    private final String PREFS_NAME = "MyPrefsFile";
    private EditText userNameEditableField;
@@ -35,11 +36,7 @@ public class Login extends FragmentActivity implements android.view.View.OnClick
 
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 
-        if (settings.getBoolean("my_first_time", true)) {
-            Log.d("Hello", "preferences called");
-            settings.edit().putBoolean("my_first_time", false).commit();
-        }
-        else {
+        if (!settings.getBoolean("my_first_time", true)){
             // Bring up the Gallery
             startActivity(new Intent(this, MainActivity.class));
             finish();
@@ -50,11 +47,11 @@ public class Login extends FragmentActivity implements android.view.View.OnClick
         
         userNameEditableField=(EditText)findViewById(R.id.username_text);
         passwordEditableField=(EditText)findViewById(R.id.password_text);
-        android.view.View btnLogin=(Button)findViewById(R.id.login_button);
+        View btnLogin=findViewById(R.id.login_button);
         btnLogin.setOnClickListener(this);
-        android.view.View btnCancel=(Button)findViewById(R.id.cancel_button);
+        View btnCancel=findViewById(R.id.cancel_button);
         btnCancel.setOnClickListener(this);
-        android.view.View btnNewUser=(Button)findViewById(R.id.new_user_button);
+        View btnNewUser=findViewById(R.id.new_user_button);
         if (btnNewUser!=null) btnNewUser.setOnClickListener(this);
         
      }
@@ -65,11 +62,15 @@ public class Login extends FragmentActivity implements android.view.View.OnClick
         this.dh = new DatabaseHelper(this);
         List<String> names = this.dh.selectAll(username, password);
         if (names.size() > 0) { // Login successful
-            // Save username as the name of the player
-            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-            SharedPreferences.Editor editor = settings.edit();
-            editor.putString(OPT_NAME, username);
-            editor.commit();
+            // Save username as the name
+
+            SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+
+            if (settings.getBoolean("my_first_time", true)) {
+                Log.d("Hello", "preferences called");
+                settings.edit().putBoolean("my_first_time", false).apply();
+                settings.edit().putString(OPT_NAME, username).apply();
+            }
 
             // Bring up the Gallery
             startActivity(new Intent(this, MainActivity.class));
@@ -87,7 +88,7 @@ public class Login extends FragmentActivity implements android.view.View.OnClick
         }
     }
 
-    public void onClick(android.view.View v) {
+    public void onClick(View v) {
 		switch (v.getId()) {
   		case R.id.login_button:
 		    checkLogin();

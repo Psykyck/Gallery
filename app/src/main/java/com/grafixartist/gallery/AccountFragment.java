@@ -30,37 +30,45 @@ public class AccountFragment extends Fragment implements OnClickListener {
         etUsername= (EditText)v.findViewById(R.id.username);
         etPassword= (EditText)v.findViewById(R.id.password);
         etConfirm = (EditText)v.findViewById(R.id.password_confirm);
-        View btnAdd= (Button)v.findViewById(R.id.done_button);
+        View btnAdd= v.findViewById(R.id.done_button);
         btnAdd.setOnClickListener(this); 
-        View btnCancel= (Button)v.findViewById(R.id.cancel_button);
+        View btnCancel= v.findViewById(R.id.cancel_button);
         btnCancel.setOnClickListener(this);
         return v;
     }
 
     private void CreateAccount(){
-    	//this.output = (TextView) this.findViewById(R.id.out_text);
     	String username = etUsername.getText().toString();
         String password = etPassword.getText().toString();
         String confirm	= etConfirm.getText().toString();
-        if ((password.equals(confirm))&&(!username.equals(""))&&(!password.equals(""))&&(!confirm.equals(""))){
-        	this.dh = new DatabaseHelper(this.getActivity());
-        	this.dh.insert(username, password);
-        	Toast.makeText(this.getActivity(), "new record inserted", Toast.LENGTH_SHORT).show();
-            getActivity().finish();
+        this.dh = new DatabaseHelper(this.getContext());
+        if (username.equals("")&& this.dh.checkUsernameExists(username)) {
+            Toast.makeText(this.getActivity(), "Username already exists", Toast.LENGTH_SHORT).show();
         }
-        else if((username.equals(""))||(password.equals(""))||(confirm.equals(""))){
-        	Toast.makeText(AccountFragment.this.getActivity(), "Missing entry", Toast.LENGTH_SHORT).show();
+        else if (username.length() < 6) {
+            Toast.makeText(this.getActivity(), "Username must be at least 6 characters", Toast.LENGTH_SHORT).show();
+        }
+        else if((password.equals(""))||(confirm.equals(""))){
+            Toast.makeText(AccountFragment.this.getActivity(), "Password or Confirm Password must not be blank", Toast.LENGTH_SHORT).show();
+        }
+        else if (password.length() < 5){
+            Toast.makeText(this.getActivity(), "Password must be at least 5 characters", Toast.LENGTH_SHORT).show();
         }
         else if(!password.equals(confirm)){
-           	new AlertDialog.Builder(this.getActivity())
-    		.setTitle("Error")
-    		.setMessage("passwords do not match")
-    		.setNeutralButton("Try Again", new DialogInterface.OnClickListener() {
-    			public void onClick(DialogInterface dialog, int which) {}
-    		})
-    		
-    		.show();
+            new AlertDialog.Builder(this.getActivity())
+                    .setTitle("Error")
+                    .setMessage("Passwords do not match")
+                    .setNeutralButton("Try Again", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {}
+                    }).show();
         }
+        else {
+            this.dh = new DatabaseHelper(this.getActivity());
+            this.dh.insert(username, password);
+            Toast.makeText(this.getActivity(), "Successfully created account", Toast.LENGTH_SHORT).show();
+            getActivity().finish();
+        }
+
     }
     
     public void onClick(View v) {

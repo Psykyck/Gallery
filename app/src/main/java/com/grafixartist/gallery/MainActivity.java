@@ -124,7 +124,9 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            return true;
+            Intent i = new Intent(MainActivity.this, AppPreferences.class);
+            startActivity(i);
+            finish();
         }
         if (id == R.id.action_sort) {
             final CharSequence[] items = {"Date", "Name", "Size"};

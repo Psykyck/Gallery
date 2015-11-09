@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <PreferenceCategory android:title="Account Settings">
+        <PreferenceScreen
+            android:title="Change Email Address"
+            android:summary="Use intent to modify email address" />
+        <PreferenceScreen
+            android:title="Change Password"
+            android:summary="Start new activity to modify password" />
+    </PreferenceCategory>
+</PreferenceScreen>

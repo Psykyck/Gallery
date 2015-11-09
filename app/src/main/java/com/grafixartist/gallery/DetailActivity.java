@@ -41,6 +41,8 @@ public class DetailActivity extends AppCompatActivity {
 
     Toolbar toolbar;
 
+    private DatabaseHelper dh;
+
     /**
      * The {@link ViewPager} that will host the section contents.
      */
@@ -90,25 +92,67 @@ public class DetailActivity extends AppCompatActivity {
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInf) {
+        this.dh = new DatabaseHelper(this);
+
         // Inflate the menu; this adds items to the action bar if it is present.
         super.onCreateContextMenu(menu, v, menuInf);
-        //menu.setHeaderTitle("Sort By");
         getMenuInflater().inflate(R.menu.context_menu, menu);
+
+        //menu.setHeaderTitle("Sort By");
+        MenuItem lockPass = menu.findItem(R.id.action_lock_pass);
+        MenuItem lockLoc = menu.findItem(R.id.action_lock_loc);
+        MenuItem unlock = menu.findItem(R.id.action_unlock);
+        if(true){ //is already locked
+            lockPass.setEnabled(false);
+            lockLoc.setEnabled(false);
+            unlock.setEnabled(true);
+        } else {
+            lockPass.setEnabled(true);
+            lockLoc.setEnabled(true);
+            unlock.setEnabled(false);
+        }
     }
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
+        this.dh = new DatabaseHelper(this);
+
         int id = item.getItemId();
         //Lock photo by password
         if (id == R.id.action_lock_pass) {
+            //assign replacement thumbnail
+            //generate random password
+            //set lock status to locked by pass
             return true;
         }
         //Lock photo by location
         if (id == R.id.action_lock_loc) {
+            //assign replacement thumbnail
+            //user inputs coordinates
+            //user inputs radius
+            //set lock status to locked by location
             return true;
         }
         //Unlock photo
         if (id == R.id.action_unlock) {
+            //if locked by pass
+                //pop-up asking for pass
+                //grab pass from db, email to logged in user
+                //if right pass
+                    //replace thumbnail
+                    //toast unlock success
+                    //return to image
+                //else
+                    //toast wrong pass
+            //if locked by loc
+                //call gps service
+                //check if user within coordinate radius
+                //if right pass
+                    //replace thumbnail
+                    //toast unlock success
+                //else
+                    //toast wrong location
+
             return true;
         }
         return super.onOptionsItemSelected(item);

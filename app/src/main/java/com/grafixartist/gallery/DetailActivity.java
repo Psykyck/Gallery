@@ -76,10 +76,8 @@ public class DetailActivity extends AppCompatActivity {
 
             @Override
             public void onPageSelected(int position) {
-
                 //noinspection ConstantConditions
                 setTitle(data.get(position).getName());
-
             }
 
             @Override
@@ -87,8 +85,6 @@ public class DetailActivity extends AppCompatActivity {
 
             }
         });
-
-
     }
 
     @Override

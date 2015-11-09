@@ -9,16 +9,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
-//For Android 3.0 and above comment out the lines below
-//For Android 3.0 and above uncomment the lines below
-// import android.app.Fragment;
-
 public class AccountFragment extends Fragment implements OnClickListener {
-	private EditText etUsername;
+	private EditText etEmail;
 	private EditText etPassword;
 	private EditText etConfirm;
 	private DatabaseHelper dh;
@@ -27,7 +23,7 @@ public class AccountFragment extends Fragment implements OnClickListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     	// Inflate the layout for this fragment
     	View v =  inflater.inflate(R.layout.accountfragment, container, false);
-        etUsername= (EditText)v.findViewById(R.id.username);
+        etEmail = (EditText)v.findViewById(R.id.email);
         etPassword= (EditText)v.findViewById(R.id.password);
         etConfirm = (EditText)v.findViewById(R.id.password_confirm);
         View btnAdd= v.findViewById(R.id.done_button);
@@ -38,14 +34,14 @@ public class AccountFragment extends Fragment implements OnClickListener {
     }
 
     private void CreateAccount(){
-    	String username = etUsername.getText().toString();
+    	String email = etEmail.getText().toString();
         String password = etPassword.getText().toString();
         String confirm	= etConfirm.getText().toString();
         this.dh = new DatabaseHelper(this.getContext());
-        if (username.equals("")&& this.dh.checkUsernameExists(username)) {
+        if (email.equals("")&& this.dh.checkUsernameExists(email)) {
             Toast.makeText(this.getActivity(), "Username already exists", Toast.LENGTH_SHORT).show();
         }
-        else if (username.length() < 6) {
+        else if (email.length() < 6) {
             Toast.makeText(this.getActivity(), "Username must be at least 6 characters", Toast.LENGTH_SHORT).show();
         }
         else if((password.equals(""))||(confirm.equals(""))){
@@ -64,7 +60,7 @@ public class AccountFragment extends Fragment implements OnClickListener {
         }
         else {
             this.dh = new DatabaseHelper(this.getActivity());
-            this.dh.insert(username, password);
+            this.dh.insert(email, password);
             Toast.makeText(this.getActivity(), "Successfully created account", Toast.LENGTH_SHORT).show();
             getActivity().finish();
         }
@@ -77,7 +73,7 @@ public class AccountFragment extends Fragment implements OnClickListener {
 		    CreateAccount();
 		    break;
 		case R.id.cancel_button:
-			etUsername.setText("");
+			etEmail.setText("");
 	        etPassword.setText("");
 	        etConfirm.setText("");
 	    	break;

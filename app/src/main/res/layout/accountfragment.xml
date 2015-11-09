@@ -20,14 +20,14 @@
             android:layout_gravity="center"
             android:layout_marginBottom="15dip"/>
         <TextView
-            android:text="Username"
+            android:text="Email"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:layout_gravity="left"/>
         <EditText
-            android:id="@+id/username"
+            android:id="@+id/email"
             android:singleLine="true"
-            android:hint="Enter username"
+            android:hint="Enter email address"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
         <TextView

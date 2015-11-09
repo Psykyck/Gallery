@@ -5,30 +5,20 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 
 import java.util.List;
 
-// import android.view.View;
-// import android.view.View.OnClickListener;
-//For Android 3.0 and above comment out the lines below
-
-//For Android 3.0 and above uncomment the lines below
-// import android.app.FragmentManager;
-// import android.app.FragmentActivity; 
-
 public class Login extends FragmentActivity implements View.OnClickListener {
    private DatabaseHelper dh;
    private final String PREFS_NAME = "MyPrefsFile";
-   private EditText userNameEditableField;
+   private EditText emailEditableField;
    private EditText passwordEditableField;
-   private final static String OPT_NAME="name";
+   private final static String OPT_EMAIL="email";
  
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -36,7 +26,7 @@ public class Login extends FragmentActivity implements View.OnClickListener {
 
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 
-        if (!settings.getBoolean("my_first_time", true)){
+        if (!settings.getBoolean("first_time_login", true)){
             // Bring up the Gallery
             startActivity(new Intent(this, MainActivity.class));
             finish();
@@ -45,7 +35,7 @@ public class Login extends FragmentActivity implements View.OnClickListener {
         FragmentManager.enableDebugLogging(true);
         setContentView(R.layout.login);
         
-        userNameEditableField=(EditText)findViewById(R.id.username_text);
+        emailEditableField=(EditText)findViewById(R.id.email_text);
         passwordEditableField=(EditText)findViewById(R.id.password_text);
         View btnLogin=findViewById(R.id.login_button);
         btnLogin.setOnClickListener(this);
@@ -57,19 +47,18 @@ public class Login extends FragmentActivity implements View.OnClickListener {
      }
     
     private void checkLogin() {
-        String username = this.userNameEditableField.getText().toString();
+        String email = this.emailEditableField.getText().toString();
         String password = this.passwordEditableField.getText().toString();
         this.dh = new DatabaseHelper(this);
-        List<String> names = this.dh.selectAll(username, password);
+        List<String> names = this.dh.selectAll(email, password);
         if (names.size() > 0) { // Login successful
             // Save username as the name
 
             SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 
-            if (settings.getBoolean("my_first_time", true)) {
-                Log.d("Hello", "preferences called");
-                settings.edit().putBoolean("my_first_time", false).apply();
-                settings.edit().putString(OPT_NAME, username).apply();
+            if (settings.getBoolean("first_time_login", true)) {
+                settings.edit().putBoolean("first_time_login", false).apply();
+                settings.edit().putString(OPT_EMAIL, email).apply();
             }
 
             // Bring up the Gallery

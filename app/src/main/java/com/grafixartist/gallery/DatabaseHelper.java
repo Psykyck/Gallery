@@ -10,15 +10,6 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.database.sqlite.SQLiteStatement;
-import android.util.Log;
-import java.util.ArrayList;
-import java.util.List;
-
 public class DatabaseHelper {
     private static final String DATABASE_NAME = "Gallery.db";
     private static final int DATABASE_VERSION = 1;
@@ -35,8 +26,8 @@ public class DatabaseHelper {
         this.insertStmt = this.db.compileStatement(INSERT);
     }
 
-    public long insert(String name, String password) {
-        this.insertStmt.bindString(1, name);
+    public long insert(String email, String password) {
+        this.insertStmt.bindString(1, email);
         this.insertStmt.bindString(2, password);
         return this.insertStmt.executeInsert();
     }
@@ -45,10 +36,10 @@ public class DatabaseHelper {
         this.db.delete(TABLE_NAME, null, null);
     }
 
-    public boolean checkUsernameExists(String username) {
+    public boolean checkUsernameExists(String email) {
         List<String> list = new ArrayList<>();
         boolean result = false;
-        Cursor cursor = this.db.query(TABLE_NAME, new String[]{"name"}, "name = '" + username + "'", null, null, null, "name desc");
+        Cursor cursor = this.db.query(TABLE_NAME, new String[] { "email" }, "email = '" + email + "'", null, null, null, "email desc");
         if (cursor.moveToFirst()) {
             do {
                 list.add(cursor.getString(0));
@@ -63,9 +54,9 @@ public class DatabaseHelper {
         return result;
     }
 
-    public List<String> selectAll(String username, String password) {
+    public List<String> selectAll(String email, String password) {
         List<String> list = new ArrayList<>();
-        Cursor cursor = this.db.query(TABLE_NAME, new String[] { "name", "password" }, "name = '"+ username +"' AND password= '"+ password+"'", null, null, null, "name desc");
+        Cursor cursor = this.db.query(TABLE_NAME, new String[] { "email", "password" }, "email = '"+ email +"' AND password= '"+ password+"'", null, null, null, "email desc");
         if (cursor.moveToFirst()) {
             do {
                 list.add(cursor.getString(0));
@@ -86,7 +77,7 @@ public class DatabaseHelper {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            db.execSQL("CREATE TABLE " + TABLE_NAME + "(id INTEGER PRIMARY KEY, name TEXT, password TEXT)");
+            db.execSQL("CREATE TABLE " + TABLE_NAME + "(id INTEGER PRIMARY KEY, email TEXT, password TEXT)");
         }
 
         @Override

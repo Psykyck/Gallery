@@ -13,9 +13,6 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Suleiman19 on 10/22/15.
- */
 public class GalleryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     Context context;

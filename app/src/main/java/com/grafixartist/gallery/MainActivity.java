@@ -58,24 +58,19 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
         mRecyclerView.setHasFixedSize(true);
 
-
         mAdapter = new GalleryAdapter(MainActivity.this, data);
         mRecyclerView.setAdapter(mAdapter);
 
         mRecyclerView.addOnItemTouchListener(new RecyclerItemClickListener(this,
                 new RecyclerItemClickListener.OnItemClickListener() {
-
                     @Override
                     public void onItemClick(View view, int position) {
-
                         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
                         intent.putParcelableArrayListExtra("data", data);
                         intent.putExtra("pos", position);
                         startActivity(intent);
-
                     }
                 }));
-
     }
 
     @Override
@@ -120,8 +115,6 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -151,7 +144,6 @@ public class MainActivity extends AppCompatActivity {
             alert.show();
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 

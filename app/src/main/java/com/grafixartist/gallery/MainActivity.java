@@ -37,8 +37,8 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < IMGS.size(); i++) {
 
             ImageModel imageModel = new ImageModel();
-            imageModel.setName("Image " + i);
-            imageModel.setUrl(IMGS.get(i));
+            imageModel.setName(IMGS.get(i).getName());
+            imageModel.setUrl(IMGS.get(i).getPath());
             data.add(imageModel);
 
         }
@@ -112,7 +112,8 @@ public class MainActivity extends AppCompatActivity {
         int column_index_data;
         int title_index_data;
         int size_index_data;
-        String PathOfImage;
+        int date_index_data;
+        String imgPath;
         String imgSize;
         String imgName;
         String imgDate;
@@ -131,21 +132,20 @@ public class MainActivity extends AppCompatActivity {
 
         cursor = activity.getContentResolver().query(uri, projection, null, null, orderBy[x] + " DESC");
 
+        //Get img properties
         column_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
-
-        // THIS IS WHERE INDEX OF TITLE AND SIZE COLUMNS ARE FOUND
         title_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
-        size_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
+        size_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE);
+        date_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_ADDED);
 
         while (cursor.moveToNext()) {
-            PathOfImage = cursor.getString(column_index_data);
+            //Get img properties
+            imgPath = cursor.getString(column_index_data);
+            imgName = cursor.getString(title_index_data);
+            imgSize = cursor.getString(size_index_data);
+            imgDate = cursor.getString(date_index_data);
 
-            // THIS IS WHERE TITLE AND SIZE ARE RETRIEVED
-            TitleOfImage = cursor.getString(title_index_data);
-            SizeOfImage = cursor.getString(size_index_data);
-
-            listOfAllImages.add(PathOfImage);
-            Image img = new Image(PathOfImage, imgSize, imgName, imgDate);
+            Image img = new Image(imgPath, imgName, imgSize, imgDate);
             listOfAllImages.add(img);
         }
         cursor.close();

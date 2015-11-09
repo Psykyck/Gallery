@@ -4,7 +4,8 @@
     <string name="sortOption">Sort By</string>
     <string name="lockOp">Lock Photo</string>
     <string name="unlockOp">Unlock Photo</string>
-    <string name="settingsOption">Advanced Settings</string>
+    <string name="settingsOption">Settings</string>
+    <string name="logout">Log Out</string>
     <string name="login_title">Your Pictures Await!</string>
     <string name="enter_username">Enter Email</string>
 </resources>

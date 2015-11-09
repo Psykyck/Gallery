@@ -43,12 +43,10 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<Image> IMGS = getImagesPath(MainActivity.this);
 
         for (int i = 0; i < IMGS.size(); i++) {
-
             ImageModel imageModel = new ImageModel();
             imageModel.setName(IMGS.get(i).getName());
             imageModel.setUrl(IMGS.get(i).getPath());
             data.add(imageModel);
-
         }
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -58,19 +56,24 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
         mRecyclerView.setHasFixedSize(true);
 
+
         mAdapter = new GalleryAdapter(MainActivity.this, data);
         mRecyclerView.setAdapter(mAdapter);
 
         mRecyclerView.addOnItemTouchListener(new RecyclerItemClickListener(this,
                 new RecyclerItemClickListener.OnItemClickListener() {
+
                     @Override
                     public void onItemClick(View view, int position) {
+
                         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
                         intent.putParcelableArrayListExtra("data", data);
                         intent.putExtra("pos", position);
                         startActivity(intent);
+
                     }
                 }));
+
     }
 
     @Override
@@ -115,6 +118,8 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -144,6 +149,10 @@ public class MainActivity extends AppCompatActivity {
             alert.show();
             return true;
         }
+        if(id == R.id.action_logout){
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 

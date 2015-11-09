@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Path;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -38,13 +39,13 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "onCreate() called");
         setContentView(R.layout.activity_main);
 
-        ArrayList<String> IMGS = getImagesPath(MainActivity.this);
+        ArrayList<Image> IMGS = getImagesPath(MainActivity.this);
 
         for (int i = 0; i < IMGS.size(); i++) {
 
             ImageModel imageModel = new ImageModel();
-            imageModel.setName("Image " + i);
-            imageModel.setUrl(IMGS.get(i));
+            imageModel.setName(IMGS.get(i).getName());
+            imageModel.setUrl(IMGS.get(i).getPath());
             data.add(imageModel);
 
         }
@@ -150,27 +151,50 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public static ArrayList<String> getImagesPath(Activity activity) {
+    public static ArrayList<Image> getImagesPath(Activity activity) {
         Uri uri;
-        ArrayList<String> listOfAllImages = new ArrayList<>();
+        ArrayList<Image> listOfAllImages = new ArrayList<>();
         Cursor cursor;
         int column_index_data;
-        String PathOfImage;
+        int title_index_data;
+        int size_index_data;
+        int date_index_data;
+        String imgPath;
+        String imgSize;
+        String imgName;
+        String imgDate;
         uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
         String[] projection = {MediaStore.MediaColumns.DATA,
                                MediaStore.MediaColumns.DISPLAY_NAME,
-                               MediaStore.MediaColumns.DATE_ADDED
+                               MediaStore.MediaColumns.DATE_ADDED,
+                                // ADDED THIS LINE TO GET DATA FROM SIZE COLUMN
+                                MediaStore.MediaColumns.SIZE
                               };
 
-        cursor = activity.getContentResolver().query(uri, projection, null, null, MediaStore.Images.Media.DATE_TAKEN + " DESC");
+        String[] orderBy = {MediaStore.Images.Media.DATE_TAKEN, MediaStore.Images.Media.SIZE, MediaStore.Images.Media.DISPLAY_NAME};
 
+        int x = 0;
+
+        cursor = activity.getContentResolver().query(uri, projection, null, null, orderBy[x] + " DESC");
+
+        //Get image properties
         column_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+        title_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
+        size_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE);
+        date_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_ADDED);
+
+
         while (cursor.moveToNext()) {
-            PathOfImage = cursor.getString(column_index_data);
-            listOfAllImages.add(PathOfImage);
+            imgPath = cursor.getString(column_index_data);
+            imgName = cursor.getString(title_index_data);
+            imgSize = cursor.getString(size_index_data);
+            imgDate = cursor.getString(date_index_data);
+            //New img object
+            Image img = new Image(imgPath, imgName, imgSize, imgDate);
+            listOfAllImages.add(img);
         }
-        //close(cursor);
+        cursor.close();
         return listOfAllImages;
     }
 

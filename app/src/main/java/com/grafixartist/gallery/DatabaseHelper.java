@@ -54,7 +54,7 @@ public class DatabaseHelper {
             cursor.close();
         }
         if (!list.isEmpty()) {
-            result = true;
+
         }
         return result;
     }
@@ -102,7 +102,7 @@ public class DatabaseHelper {
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE " + ACCOUNTS_TABLE + "(id INTEGER PRIMARY KEY, email TEXT, password TEXT)");
             db.execSQL("CREATE TABLE " + PHOTOS_TABLE + "(id INTEGER PRIMARY KEY, filename TEXT, date TEXT, size TEXT, path TEXT, pinlock INTEGER, locationlock INTEGER)");
-            db.execSQL("CREATE TABLE " + LOCATION_TABLE + "(id INTEGER, coordinates TEXT, radius TEXT), FOREIGN KEY(id) REFERENCES " + PHOTOS_TABLE + "(id))");
+            db.execSQL("CREATE TABLE " + LOCATION_TABLE + "(id INTEGER, coordinates TEXT, radius TEXT, FOREIGN KEY(id) REFERENCES " + PHOTOS_TABLE + "(id))");
             db.execSQL("CREATE TABLE " + PIN_TABLE + "(id INTEGER, passcode TEXT, FOREIGN KEY(id) REFERENCES " + PHOTOS_TABLE + "(id))");
             db.execSQL("ALTER TABLE " + LOCATION_TABLE + " ADD COLUMN replacementfk INTEGER REFERENCES " + PHOTOS_TABLE + "(id)");
             db.execSQL("ALTER TABLE " + PIN_TABLE + " ADD COLUMN replacementfk INTEGER REFERENCES " + PHOTOS_TABLE + "(id)");

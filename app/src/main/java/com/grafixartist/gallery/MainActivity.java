@@ -3,6 +3,7 @@ package com.grafixartist.gallery;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Path;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -16,7 +17,7 @@ import android.view.View;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
 
     GalleryAdapter mAdapter;
     RecyclerView mRecyclerView;
@@ -31,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "onCreate() called");
         setContentView(R.layout.activity_main);
 
-        ArrayList<String> IMGS = getImagesPath(MainActivity.this);
+        ArrayList<Image> IMGS = getImagesPath(MainActivity.this);
 
         for (int i = 0; i < IMGS.size(); i++) {
 
@@ -104,27 +105,32 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "onDestroy() called");
     }
 
-    public static ArrayList<String> getImagesPath(Activity activity) {
+    public static ArrayList<Image> getImagesPath(Activity activity) {
         Uri uri;
-        ArrayList<String> listOfAllImages = new ArrayList<>();
+        ArrayList<Image> listOfAllImages = new ArrayList<>();
         Cursor cursor;
         int column_index_data;
         String PathOfImage;
+        String imgSize;
+        String imgName;
+        String imgDate;
         uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
-        String[] projection = {MediaStore.MediaColumns.DATA,
-                               MediaStore.MediaColumns.DISPLAY_NAME,
-                               MediaStore.MediaColumns.DATE_ADDED
-                              };
+        String[] projection = {MediaStore.MediaColumns.DATA};
 
-        cursor = activity.getContentResolver().query(uri, projection, null, null, MediaStore.Images.Media.DATE_TAKEN + " DESC");
+        String[] orderBy = {MediaStore.Images.Media.DATE_TAKEN, MediaStore.Images.Media.SIZE, MediaStore.Images.Media.DISPLAY_NAME};
+
+        int x = 0;
+
+        cursor = activity.getContentResolver().query(uri, projection, null, null, orderBy[x] + " DESC");
 
         column_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
         while (cursor.moveToNext()) {
             PathOfImage = cursor.getString(column_index_data);
-            listOfAllImages.add(PathOfImage);
+            Image img = new Image(PathOfImage, imgSize, imgName, imgDate);
+            listOfAllImages.add(img);
         }
-        //close(cursor);
+        cursor.close();
         return listOfAllImages;
     }
 

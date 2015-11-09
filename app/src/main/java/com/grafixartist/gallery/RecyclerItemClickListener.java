@@ -1,13 +1,17 @@
 package com.grafixartist.gallery;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
 public class RecyclerItemClickListener implements RecyclerView.OnItemTouchListener {
   private OnItemClickListener mListener;
+
+  private static final String TAG = "RecyclerItemClickListener";
 
   public interface OnItemClickListener {
     public void onItemClick(View view, int position);

@@ -7,6 +7,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,6 +30,8 @@ public class DetailActivity extends AppCompatActivity {
      * {@link android.support.v4.app.FragmentStatePagerAdapter}.
      */
     private SectionsPagerAdapter mSectionsPagerAdapter;
+
+    private static final String TAG = "DetailActivity";
 
     public ArrayList<ImageModel> data = new ArrayList<>();
     int pos;
@@ -184,12 +187,48 @@ public class DetailActivity extends AppCompatActivity {
         @Override
         public void onStart() {
             super.onStart();
+            Log.d(TAG, "onStart() called");
+        }
 
+        @Override
+        public void onSaveInstanceState(Bundle savedInstanceState) {
+            super.onSaveInstanceState(savedInstanceState);
+            savedInstanceState.putString("url", this.url);
+            Log.i(TAG, "onSaveInstanceState");
+        }
+
+        @Override
+        public void onPause() {
+            super.onPause();
+            Log.d(TAG, "onPause() called");
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            Log.d(TAG, "onResume() called");
+        }
+        @Override
+        public void onStop() {
+            super.onStop();
+            Log.d(TAG, "onStop() called");
+        }
+
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+            Log.d(TAG, "onDestroy() called");
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
+            Log.d(TAG, "onCreateView() called");
+
+            if(this.url == null) {
+                this.url = savedInstanceState.getString("url");
+            }
+
             View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
 
             final ImageView imageView = (ImageView) rootView.findViewById(R.id.detail_image);

@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
 
     GalleryAdapter mAdapter;
     RecyclerView mRecyclerView;
+    private static int x=0;
 
     private static final String TAG = "MainActivity";
 
@@ -139,7 +140,11 @@ public class MainActivity extends AppCompatActivity {
             builder.setTitle("Sort By");
             builder.setItems(items, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int item) {
-                    Toast.makeText(getApplicationContext(), items[item], Toast.LENGTH_SHORT).show();
+                    x = item;
+                    //Refresh view
+                    finish();
+                    startActivity(getIntent());
+                    Toast.makeText(getApplicationContext(), "Sorted by " + items[item], Toast.LENGTH_SHORT).show();
                 }
             });
             AlertDialog alert = builder.create();
@@ -171,9 +176,7 @@ public class MainActivity extends AppCompatActivity {
                                 MediaStore.MediaColumns.SIZE
                               };
 
-        String[] orderBy = {MediaStore.Images.Media.DATE_TAKEN, MediaStore.Images.Media.SIZE, MediaStore.Images.Media.DISPLAY_NAME};
-
-        int x = 0;
+        String[] orderBy = {MediaStore.Images.Media.DATE_TAKEN, MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media.SIZE};
 
         cursor = activity.getContentResolver().query(uri, projection, null, null, orderBy[x] + " DESC");
 

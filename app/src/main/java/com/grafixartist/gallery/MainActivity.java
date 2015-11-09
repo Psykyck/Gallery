@@ -17,7 +17,7 @@ import android.view.View;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity {
 
     GalleryAdapter mAdapter;
     RecyclerView mRecyclerView;
@@ -110,13 +110,20 @@ public class MainActivity extends AppCompatActivity{
         ArrayList<Image> listOfAllImages = new ArrayList<>();
         Cursor cursor;
         int column_index_data;
+        int title_index_data;
+        int size_index_data;
         String PathOfImage;
         String imgSize;
         String imgName;
         String imgDate;
         uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
-        String[] projection = {MediaStore.MediaColumns.DATA};
+        String[] projection = {MediaStore.MediaColumns.DATA,
+                               MediaStore.MediaColumns.DISPLAY_NAME,
+                               MediaStore.MediaColumns.DATE_ADDED,
+                                // ADDED THIS LINE TO GET DATA FROM SIZE COLUMN
+                                MediaStore.MediaColumns.SIZE
+                              };
 
         String[] orderBy = {MediaStore.Images.Media.DATE_TAKEN, MediaStore.Images.Media.SIZE, MediaStore.Images.Media.DISPLAY_NAME};
 
@@ -125,8 +132,19 @@ public class MainActivity extends AppCompatActivity{
         cursor = activity.getContentResolver().query(uri, projection, null, null, orderBy[x] + " DESC");
 
         column_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+
+        // THIS IS WHERE INDEX OF TITLE AND SIZE COLUMNS ARE FOUND
+        title_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
+        size_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
+
         while (cursor.moveToNext()) {
             PathOfImage = cursor.getString(column_index_data);
+
+            // THIS IS WHERE TITLE AND SIZE ARE RETRIEVED
+            TitleOfImage = cursor.getString(title_index_data);
+            SizeOfImage = cursor.getString(size_index_data);
+
+            listOfAllImages.add(PathOfImage);
             Image img = new Image(PathOfImage, imgSize, imgName, imgDate);
             listOfAllImages.add(img);
         }

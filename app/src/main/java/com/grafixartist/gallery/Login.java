@@ -26,7 +26,7 @@ public class Login extends FragmentActivity implements View.OnClickListener {
 
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 
-        if (!settings.getBoolean("first_time_loginn", true)){
+        if (!settings.getBoolean("first_time_login", true)){
             // Bring up the Gallery
             startActivity(new Intent(this, MainActivity.class));
             finish();

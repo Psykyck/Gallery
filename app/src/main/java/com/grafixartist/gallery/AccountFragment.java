@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -58,15 +59,21 @@ public class AccountFragment extends Fragment implements OnClickListener {
                         public void onClick(DialogInterface dialog, int which) {}
                     }).show();
         }
+        else if (!isValidEmail(email)) {
+            Toast.makeText(this.getActivity(), "Not a valid email address", Toast.LENGTH_SHORT).show();
+        }
         else {
             this.dh = new DatabaseHelper(this.getActivity());
             this.dh.insert(email, password);
             Toast.makeText(this.getActivity(), "Successfully created account", Toast.LENGTH_SHORT).show();
             getActivity().finish();
         }
-
     }
-    
+
+    public static boolean isValidEmail(CharSequence target) {
+        return target != null && Patterns.EMAIL_ADDRESS.matcher(target).matches();
+    }
+
     public void onClick(View v) {
 		switch (v.getId()) {
   		case R.id.done_button:

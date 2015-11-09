@@ -17,7 +17,7 @@ public class DatabaseHelper {
     private Context context;
     private SQLiteDatabase db;
     private SQLiteStatement insertStmt;
-    private static final String INSERT = "insert into " + TABLE_NAME + "(name, password) values (?, ?)" ;
+    private static final String INSERT = "insert into " + TABLE_NAME + "(email, password) values (?, ?)" ;
 
     public DatabaseHelper(Context context) {
         this.context = context;

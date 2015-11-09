@@ -2,7 +2,8 @@
     <string name="app_name">Gallery</string>
     <string name="action_settings">Settings</string>
     <string name="sortOption">Sort By</string>
-    <string name="lockOp">Lock Photo</string>
+    <string name="lockOpPass">Lock Photo (Password)</string>
+    <string name="lockOpLoc">Lock Photo (Location)</string>
     <string name="unlockOp">Unlock Photo</string>
     <string name="settingsOption">Settings</string>
     <string name="logout">Log Out</string>

@@ -62,15 +62,12 @@ public class MainActivity extends AppCompatActivity {
 
         mRecyclerView.addOnItemTouchListener(new RecyclerItemClickListener(this,
                 new RecyclerItemClickListener.OnItemClickListener() {
-
                     @Override
                     public void onItemClick(View view, int position) {
-
                         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
                         intent.putParcelableArrayListExtra("data", data);
                         intent.putExtra("pos", position);
                         startActivity(intent);
-
                     }
                 }));
 
@@ -117,8 +114,6 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_detail, menu);
         return true;
     }
-
-
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -186,7 +181,6 @@ public class MainActivity extends AppCompatActivity {
         title_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
         size_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE);
         date_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_ADDED);
-
 
         while (cursor.moveToNext()) {
             imgPath = cursor.getString(column_index_data);

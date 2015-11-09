@@ -1,5 +1,7 @@
 package com.grafixartist.gallery;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -10,9 +12,11 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
@@ -90,6 +94,24 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreateContextMenu(menu, v, menuInf);
         //menu.setHeaderTitle("Sort By");
         getMenuInflater().inflate(R.menu.context_menu, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        //Lock photo by password
+        if (id == R.id.action_lock_pass) {
+            return true;
+        }
+        //Lock photo by location
+        if (id == R.id.action_lock_loc) {
+            return true;
+        }
+        //Unlock photo
+        if (id == R.id.action_unlock) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     /**

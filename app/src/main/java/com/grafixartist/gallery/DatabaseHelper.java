@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -151,6 +152,30 @@ public class DatabaseHelper {
             cursor.close();
         }
         return list;
+    }
+
+    public String selectFirst(String email, String password) {
+        String pass = "";
+        Cursor cursor = this.db.query(ACCOUNTS_TABLE, new String[] { "email", "password" }, "email = '"+ email +"' AND password= '"+ password+"'", null, null, null, "email desc");
+        if (cursor.moveToFirst()) {
+                pass = cursor.getString(1);
+        }
+        if (!cursor.isClosed()) {
+            cursor.close();
+        }
+        return pass;
+    }
+
+    public void updateEmail(String oldEmail, String newEmail) {
+        Cursor c = this.db.rawQuery("UPDATE " + ACCOUNTS_TABLE + " SET email='" + newEmail + "' WHERE email=" + "'" + oldEmail + "'", null);
+        c.moveToFirst();
+        c.close();
+    }
+
+    public void updatePassword(String oldEmail, String newPass) {
+        Cursor c = this.db.rawQuery("UPDATE " + ACCOUNTS_TABLE + " SET password='" + newPass + "' WHERE email=" + "'" + oldEmail + "'", null);
+        c.moveToFirst();
+        c.close();
     }
 
     private static class GalleryOpenHelper extends SQLiteOpenHelper {

@@ -2,17 +2,21 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/passroot" >
+    android:id="@+id/passroot"
+    android:background="@color/background"
+    android:padding="20dip"
+    android:textSize="15.5sp">
+
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/tview_oldpwd"
-        android:text="Old Password"/>
+        android:text="Current Password"/>
     <EditText
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/cur_pwd"
+        android:id="@+id/cureml_pwd"
         android:hint="Current Password"
         android:inputType="textPassword" />
 
@@ -26,7 +30,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/new_email1"
         android:hint="New Email"
-        android:inputType="textPassword" />
+        android:inputType="textEmailAddress"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -38,7 +42,7 @@
         android:layout_height="wrap_content"
         android:hint="New Email"
         android:id="@+id/new_email2"
-        android:inputType="textPassword" />
+        android:inputType="textEmailAddress"/>
 
 
     <LinearLayout
@@ -53,7 +57,7 @@
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/pwdCancel"
+            android:id="@+id/emlCancel"
             android:text="CANCEL" />
 
 
@@ -68,7 +72,7 @@
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/pwdOk"
+            android:id="@+id/emlOk"
             android:text="OK"/>
 
     </LinearLayout>

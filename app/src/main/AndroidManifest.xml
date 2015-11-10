@@ -34,6 +34,10 @@
         </activity>
         <activity android:name=".DetailActivity" >
         </activity>
+        <activity android:name=".ChangeEmail">
+        </activity>
+        <activity android:name=".ChangePassword">
+        </activity>
         <activity android:name=".AppPreferences" >
         </activity>
         <activity

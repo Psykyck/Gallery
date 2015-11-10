@@ -27,7 +27,7 @@ public class DatabaseHelper {
     private static final String INSERT_PHOTO = "INSERT OR IGNORE INTO " + PHOTOS_TABLE + "(path, filename, date, size) values (?, ?, ?, ?)" ;
     private static final String INSERT = "INSERT INTO " + ACCOUNTS_TABLE + "(email, password) values (?, ?)" ;
     private static final String FIND_ID = "SELECT id FROM " + PHOTOS_TABLE + " pt WHERE pt.path=?";
-    private static final String FIND_PIN_REPLACEMENT = "SELECT replacementFK FROM " + PIN_TABLE + " p WHERE p.originalFK=?";
+    private static final String FIND_PIN_REPLACEMENT = "SELECT replacementFK FROM " + PIN_TABLE + " WHERE originalFK=?";
     private static final String GET_PHOTO_DETAILS = "SELECT path, filename, size, date FROM " + PHOTOS_TABLE + " p WHERE p.ID=?";
     private static final String ENABLE_LOCK_PIN = "UPDATE " + PHOTOS_TABLE + " SET pinLock=1 WHERE path=?";
     private static final String ENABLE_LOCATION_PIN = "UPDATE " + PHOTOS_TABLE + " SET locationLock=1 WHERE path=?";
@@ -98,13 +98,13 @@ public class DatabaseHelper {
     }
 
     public Image getReplacementPhoto(String filepath){
-        int id = 0;
+        int id = 3;
         //Find id of replacement photo
         Cursor cursor = db.rawQuery(FIND_PIN_REPLACEMENT, new String[]{String.valueOf(returnID(filepath))});
         if(cursor.moveToFirst()){
             id = cursor.getInt(0);
         }
-        cursor.close();
+        //cursor.close();
         return getPhotoDetails(id);
     }
 

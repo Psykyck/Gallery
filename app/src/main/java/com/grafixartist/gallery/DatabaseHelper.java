@@ -98,7 +98,7 @@ public class DatabaseHelper {
     }
 
     public Image getReplacementPhoto(String filepath){
-        int id = 3;
+        int id = 1;
         //Find id of replacement photo
         Cursor cursor = db.rawQuery(FIND_PIN_REPLACEMENT, new String[]{String.valueOf(returnID(filepath))});
         if(cursor.moveToFirst()){

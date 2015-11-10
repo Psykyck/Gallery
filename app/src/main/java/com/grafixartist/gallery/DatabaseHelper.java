@@ -21,8 +21,8 @@ public class DatabaseHelper {
     private SQLiteDatabase db;
     private SQLiteStatement insertStmt;
     private SQLiteStatement insertPhotoStmt;
-    private static final String INSERT_PHOTO = "insert into " + ACCOUNTS_TABLE + "(path, filename, date, size) values (?, ?, ?, ?)" ;
-    private static final String INSERT = "insert into " + PHOTOS_TABLE + "(email, password) values (?, ?)" ;
+    private static final String INSERT_PHOTO = "insert or ignore into " + PHOTOS_TABLE + "(path, filename, date, size) values (?, ?, ?, ?)" ;
+    private static final String INSERT = "insert into " + ACCOUNTS_TABLE + "(email, password) values (?, ?)" ;
 
     public DatabaseHelper(Context context) {
         this.context = context;
@@ -52,26 +52,32 @@ public class DatabaseHelper {
 
     public boolean checkPinLock(String filePath) {
         // Check if pin lock
-        List<String> list = new ArrayList<>();
         boolean result = false;
-        Cursor cursor = this.db.query(PHOTOS_TABLE, new String[] { "path, pinlock" }, "path = '" + filePath + "'", null, null, null, null);
+        Cursor cursor = this.db.query(PHOTOS_TABLE, new String[] { "path, pinLock" }, "path = '" + filePath + "'", null, null, null, null);
         if (cursor.moveToFirst()) {
-            do {
-                list.add(cursor.getString(0));
-                list.add(cursor.getString(1));
-            } while (cursor.moveToNext());
+            if(cursor.getInt(1) == 1){
+                result = true;
+            }
         }
         if (!cursor.isClosed()) {
             cursor.close();
-        }
-        if (!list.isEmpty()) {
-
         }
         return result;
     }
 
     public boolean checkLocLock(String filePath) {
-        return false;
+        // Check if pin lock
+        boolean result = false;
+        Cursor cursor = this.db.query(PHOTOS_TABLE, new String[] { "path, locationLock" }, "path = '" + filePath + "'", null, null, null, null);
+        if (cursor.moveToFirst()) {
+            if(cursor.getInt(1) == 1){
+                result = true;
+            }
+        }
+        if (!cursor.isClosed()) {
+            cursor.close();
+        }
+        return result;
     }
 
     public boolean checkUsernameExists(String email) {
@@ -116,7 +122,7 @@ public class DatabaseHelper {
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE " + ACCOUNTS_TABLE + "(id INTEGER PRIMARY KEY, email TEXT, password TEXT)");
-            db.execSQL("CREATE TABLE " + PHOTOS_TABLE + "(id INTEGER PRIMARY KEY, filename TEXT, date TEXT, size TEXT, path TEXT, pinlock INTEGER, locationlock INTEGER)");
+            db.execSQL("CREATE TABLE " + PHOTOS_TABLE + "(id INTEGER PRIMARY KEY, filename TEXT, date TEXT, size TEXT, path TEXT, pinLock INTEGER DEFAULT 0, locationLock INTEGER DEFAULT 0, UNIQUE(path))");
             db.execSQL("CREATE TABLE " + LOCATION_TABLE + "(id INTEGER, coordinates TEXT, radius TEXT, FOREIGN KEY(id) REFERENCES " + PHOTOS_TABLE + "(id))");
             db.execSQL("CREATE TABLE " + PIN_TABLE + "(id INTEGER, passcode TEXT, FOREIGN KEY(id) REFERENCES " + PHOTOS_TABLE + "(id))");
             db.execSQL("ALTER TABLE " + LOCATION_TABLE + " ADD COLUMN replacementfk INTEGER REFERENCES " + PHOTOS_TABLE + "(id)");

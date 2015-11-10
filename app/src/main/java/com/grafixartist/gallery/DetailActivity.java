@@ -102,7 +102,7 @@ public class DetailActivity extends AppCompatActivity {
         MenuItem lockPass = menu.findItem(R.id.action_lock_pass);
         MenuItem lockLoc = menu.findItem(R.id.action_lock_loc);
         MenuItem unlock = menu.findItem(R.id.action_unlock);
-        if(dh.checkPinLock(data.get(pos).getUrl())){ //is already locked
+        if(dh.checkPinLock(data.get(pos).getUrl()) || dh.checkLocLock(data.get(pos).getUrl())){ //is already locked
             lockPass.setEnabled(false);
             lockLoc.setEnabled(false);
             unlock.setEnabled(true);

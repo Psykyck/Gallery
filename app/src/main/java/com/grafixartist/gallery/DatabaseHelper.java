@@ -26,9 +26,12 @@ public class DatabaseHelper {
     private SQLiteStatement insertPhotoStmt;
     private static final String INSERT_PHOTO = "INSERT OR IGNORE INTO " + PHOTOS_TABLE + "(path, filename, date, size) values (?, ?, ?, ?)" ;
     private static final String INSERT = "INSERT INTO " + ACCOUNTS_TABLE + "(email, password) values (?, ?)" ;
-    private final String FIND_ID = "SELECT id FROM " + PHOTOS_TABLE + " pt WHERE pt.path=?";
-    private final String FIND_PIN_REPLACEMENT = "SELECT replacementID FROM " + PIN_TABLE + " p WHERE p.originalID=?";
-    private final String GET_PHOTO_DETAILS = "SELECT path, filename, size, date FROM " + PHOTOS_TABLE + " p WHERE p.ID=?";
+    private static final String FIND_ID = "SELECT id FROM " + PHOTOS_TABLE + " pt WHERE pt.path=?";
+    private static final String FIND_PIN_REPLACEMENT = "SELECT replacementFK FROM " + PIN_TABLE + " p WHERE p.originalFK=?";
+    private static final String GET_PHOTO_DETAILS = "SELECT path, filename, size, date FROM " + PHOTOS_TABLE + " p WHERE p.ID=?";
+    private static final String ENABLE_LOCK_PIN = "UPDATE " + PHOTOS_TABLE + " SET pinLock=1 WHERE path=?";
+    private static final String SET_REPLACEMENT_PHOTO = "UPDATE " + PIN_TABLE + " SET replacementFK=?, passcode=? WHERE originalFK=?";
+
 
     public DatabaseHelper(Context context) {
         this.context = context;
@@ -59,7 +62,7 @@ public class DatabaseHelper {
     public boolean checkPinLock(String filePath) {
         // Check if pin lock
         boolean result = false;
-        Cursor cursor = this.db.query(PHOTOS_TABLE, new String[] { "path, pinLock" }, "path = '" + filePath + "'", null, null, null, null);
+        Cursor cursor = this.db.query(PHOTOS_TABLE, new String[]{"path, pinLock"}, "path = '" + filePath + "'", null, null, null, null);
         if (cursor.moveToFirst()) {
             if(cursor.getInt(1) == 1){
                 result = true;
@@ -73,23 +76,23 @@ public class DatabaseHelper {
 
     public void enablePinLock(String filePath, String replacementPath){
         //Set pin lock status to true
-        String strFilter = "path=" + filePath;
-        ContentValues args = new ContentValues();
-        args.put("pinLock", 1);
-        this.db.update(PHOTOS_TABLE, args, strFilter, null);
-
+        Cursor cursor = db.rawQuery(ENABLE_LOCK_PIN, new String[]{filePath});
+        cursor.moveToFirst();
+        cursor.close();
         //Update thumbnail
-        strFilter = "originalFK=" + returnID(filePath);
-        args.clear();
-        args.put("replacementFK", returnID(replacementPath));
-        //Create passcode
-        args.put("passcode", UUID.randomUUID().toString());
-        this.db.update(PIN_TABLE, args, strFilter, null);
+        Cursor cursor2 = db.rawQuery(SET_REPLACEMENT_PHOTO, new String[]{String.valueOf(returnID(replacementPath)), UUID.randomUUID().toString(), String.valueOf(returnID(filePath))});
+        cursor2.moveToFirst();
+        cursor2.close();
     }
 
     public Image getReplacementPhoto(String filepath){
+        int id = 0;
         //Find id of replacement photo
-        int id = db.rawQuery(FIND_PIN_REPLACEMENT, new String[]{String.valueOf(returnID(filepath))}).getInt(0);
+        Cursor cursor = db.rawQuery(FIND_PIN_REPLACEMENT, new String[]{String.valueOf(returnID(filepath))});
+        if(cursor.moveToFirst()){
+            id = cursor.getInt(0);
+        }
+        cursor.close();
         return getPhotoDetails(id);
     }
 
@@ -99,11 +102,18 @@ public class DatabaseHelper {
         if(cursor.moveToFirst()) {
             temp = new Image(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3));
         }
+        cursor.close();
         return temp;
     }
 
     private int returnID(String filepath){
-        return db.rawQuery(FIND_ID, new String[]{filepath}).getInt(0);
+        int id = 0;
+        Cursor cursor = db.rawQuery(FIND_ID, new String[]{filepath});
+        if(cursor.moveToFirst()){
+            id = cursor.getInt(0);
+        }
+        cursor.close();
+        return id;
     }
 
     public boolean checkLocLock(String filePath) {
@@ -188,8 +198,8 @@ public class DatabaseHelper {
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE " + ACCOUNTS_TABLE + "(id INTEGER PRIMARY KEY, email TEXT, password TEXT)");
             db.execSQL("CREATE TABLE " + PHOTOS_TABLE + "(id INTEGER PRIMARY KEY, filename TEXT, date TEXT, size TEXT, path TEXT, pinLock INTEGER DEFAULT 0, locationLock INTEGER DEFAULT 0, UNIQUE(path))");
-            db.execSQL("CREATE TABLE " + LOCATION_TABLE + "(id INTEGER, coordinates TEXT, radius TEXT, originalID INTEGER, replacementID INTEGER, FOREIGN KEY(originalID) REFERENCES " + PHOTOS_TABLE + "(id), FOREIGN KEY(replacementID) REFERENCES " + PHOTOS_TABLE + "(id))");
-            db.execSQL("CREATE TABLE " + PIN_TABLE + "(id INTEGER, passcode TEXT, originalID INTEGER, replacementID INTEGER, FOREIGN KEY(originalID) REFERENCES " + PHOTOS_TABLE + "(id), FOREIGN KEY(replacementID) REFERENCES " + PHOTOS_TABLE + "(id))");
+            db.execSQL("CREATE TABLE " + LOCATION_TABLE + "(id INTEGER, coordinates TEXT, radius TEXT, originalFK INTEGER, replacementFK INTEGER, FOREIGN KEY(originalFK) REFERENCES " + PHOTOS_TABLE + "(id), FOREIGN KEY(replacementFK) REFERENCES " + PHOTOS_TABLE + "(id))");
+            db.execSQL("CREATE TABLE " + PIN_TABLE + "(id INTEGER, passcode TEXT, originalFK INTEGER, replacementFK INTEGER, FOREIGN KEY(originalFK) REFERENCES " + PHOTOS_TABLE + "(id), FOREIGN KEY(replacementFK) REFERENCES " + PHOTOS_TABLE + "(id))");
         }
 
         @Override

@@ -1,5 +1,6 @@
 package com.grafixartist.gallery;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -40,6 +41,7 @@ public class DetailActivity extends AppCompatActivity {
 
     private static final String TAG = "DetailActivity";
     private static final int CHOOSE_IMAGE_REQUEST = 1;
+    private static final int CHOOSE_LOCATION_REQUEST = 2;
     public ArrayList<ImageModel> data = new ArrayList<>();
     int pos;
     Toolbar toolbar;
@@ -134,6 +136,8 @@ public class DetailActivity extends AppCompatActivity {
             //user inputs coordinates
             //user inputs radius
             //set lock status to locked by location
+            Intent gps = new Intent(this, MapsActivity.class);
+            startActivityForResult(gps, CHOOSE_LOCATION_REQUEST);
             return true;
         }
         //Unlock photo
@@ -163,11 +167,9 @@ public class DetailActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent iData) {
-        if(resultCode != RESULT_CANCELED) {
-            super.onActivityResult(requestCode, resultCode, iData);
-            Uri selectedImageUri = iData.getData();
-            dh.enablePinLock(data.get(pos).getUrl(), getPath(selectedImageUri));
-        }
+        super.onActivityResult(requestCode, resultCode, iData);
+        Uri selectedImageUri = iData.getData();
+        dh.enablePinLock(data.get(pos).getUrl(), getPath(selectedImageUri));
     }
 
 /**

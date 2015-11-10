@@ -38,8 +38,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        this.dh = new DatabaseHelper(this);
-
         super.onCreate(savedInstanceState);
         Log.i(TAG, "onCreate() called");
         setContentView(R.layout.activity_main);
@@ -50,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
             ImageModel imageModel = new ImageModel();
             imageModel.setName(IMGS.get(i).getName());
             imageModel.setUrl(IMGS.get(i).getPath());
-            dh.insertPhoto(IMGS.get(i).getPath(), IMGS.get(i).getName(), IMGS.get(i).getDateTaken(), IMGS.get(i).getSize());
             data.add(imageModel);
         }
 
@@ -158,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public static ArrayList<Image> getImagesPath(Activity activity) {
+    public ArrayList<Image> getImagesPath(Activity activity) {
         Uri uri;
         ArrayList<Image> listOfAllImages = new ArrayList<>();
         Cursor cursor;
@@ -170,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
         String imgSize;
         String imgName;
         String imgDate;
+        this.dh = new DatabaseHelper(this);
         uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
         String[] projection = {MediaStore.MediaColumns.DATA,
@@ -194,8 +192,13 @@ public class MainActivity extends AppCompatActivity {
             imgName = cursor.getString(title_index_data);
             imgSize = cursor.getString(size_index_data);
             imgDate = cursor.getString(date_index_data);
-            //New img object
+            //Insert into db if not exists
+            dh.insertPhoto(imgPath, imgName, imgDate, imgSize);
             Image img = new Image(imgPath, imgName, imgSize, imgDate);
+            //Check if locked by password
+            if(dh.checkPinLock(imgPath)){
+                img = dh.getReplacementPhoto(imgPath);
+            }
             listOfAllImages.add(img);
         }
         cursor.close();

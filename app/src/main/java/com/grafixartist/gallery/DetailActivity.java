@@ -2,7 +2,11 @@ package com.grafixartist.gallery;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -35,13 +39,12 @@ public class DetailActivity extends AppCompatActivity {
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
     private static final String TAG = "DetailActivity";
-
+    private static final int CHOOSE_IMAGE_REQUEST = 1;
     public ArrayList<ImageModel> data = new ArrayList<>();
     int pos;
-
     Toolbar toolbar;
-
     private DatabaseHelper dh;
+    private String replacementPath;
 
     /**
      * The {@link ViewPager} that will host the section contents.
@@ -121,8 +124,8 @@ public class DetailActivity extends AppCompatActivity {
         //Lock photo by password
         if (id == R.id.action_lock_pass) {
             //assign replacement thumbnail
-            //generate random password
-            //set lock status to locked by pass
+            Intent i = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(i, CHOOSE_IMAGE_REQUEST);
             return true;
         }
         //Lock photo by location
@@ -156,6 +159,31 @@ public class DetailActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent iData) {
+        super.onActivityResult(requestCode, resultCode, iData);
+        Uri selectedImageUri = iData.getData();
+        dh.enablePinLock(data.get(pos).getUrl(), getPath(selectedImageUri));
+    }
+
+/**
+ * helper to retrieve the path of an image URI
+ */
+    public String getPath(Uri uri) {
+        if( uri == null ) {
+            return null;
+        }
+        String[] projection = { MediaStore.Images.Media.DATA };
+        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
+        if( cursor != null ){
+            int column_index = cursor
+                    .getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        }
+        return uri.getPath();
     }
 
     /**

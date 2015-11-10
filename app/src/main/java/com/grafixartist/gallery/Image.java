@@ -16,6 +16,13 @@ public class Image {
         this.dateTaken = dateTaken;
     }
 
+    public Image(){
+        this.name = "";
+        this.path = "";
+        this.size = "";
+        this.dateTaken = "";
+    }
+
     public String getName(){
         return name;
     }

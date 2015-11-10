@@ -1,5 +1,6 @@
 package com.grafixartist.gallery;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -9,6 +10,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class DatabaseHelper {
     private static final String DATABASE_NAME = "Gallery.db";
@@ -21,8 +23,11 @@ public class DatabaseHelper {
     private SQLiteDatabase db;
     private SQLiteStatement insertStmt;
     private SQLiteStatement insertPhotoStmt;
-    private static final String INSERT_PHOTO = "insert or ignore into " + PHOTOS_TABLE + "(path, filename, date, size) values (?, ?, ?, ?)" ;
-    private static final String INSERT = "insert into " + ACCOUNTS_TABLE + "(email, password) values (?, ?)" ;
+    private static final String INSERT_PHOTO = "INSERT OR IGNORE INTO " + PHOTOS_TABLE + "(path, filename, date, size) values (?, ?, ?, ?)" ;
+    private static final String INSERT = "INSERT INTO " + ACCOUNTS_TABLE + "(email, password) values (?, ?)" ;
+    private final String FIND_ID = "SELECT id FROM " + PHOTOS_TABLE + " pt WHERE pt.path=?";
+    private final String FIND_PIN_REPLACEMENT = "SELECT replacementID FROM " + PIN_TABLE + " p WHERE p.originalID=?";
+    private final String GET_PHOTO_DETAILS = "SELECT path, filename, size, date FROM " + PHOTOS_TABLE + " p WHERE p.ID=?";
 
     public DatabaseHelper(Context context) {
         this.context = context;
@@ -63,6 +68,41 @@ public class DatabaseHelper {
             cursor.close();
         }
         return result;
+    }
+
+    public void enablePinLock(String filePath, String replacementPath){
+        //Set pin lock status to true
+        String strFilter = "path=" + filePath;
+        ContentValues args = new ContentValues();
+        args.put("pinLock", 1);
+        this.db.update(PHOTOS_TABLE, args, strFilter, null);
+
+        //Update thumbnail
+        strFilter = "originalFK=" + returnID(filePath);
+        args.clear();
+        args.put("replacementFK", returnID(replacementPath));
+        //Create passcode
+        args.put("passcode", UUID.randomUUID().toString());
+        this.db.update(PIN_TABLE, args, strFilter, null);
+    }
+
+    public Image getReplacementPhoto(String filepath){
+        //Find id of replacement photo
+        int id = db.rawQuery(FIND_PIN_REPLACEMENT, new String[]{String.valueOf(returnID(filepath))}).getInt(0);
+        return getPhotoDetails(id);
+    }
+
+    private Image getPhotoDetails(int id){
+        Cursor cursor = db.rawQuery(GET_PHOTO_DETAILS, new String[]{String.valueOf(id)});
+        Image temp = new Image();
+        if(cursor.moveToFirst()) {
+            temp = new Image(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3));
+        }
+        return temp;
+    }
+
+    private int returnID(String filepath){
+        return db.rawQuery(FIND_ID, new String[]{filepath}).getInt(0);
     }
 
     public boolean checkLocLock(String filePath) {
@@ -123,10 +163,8 @@ public class DatabaseHelper {
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE " + ACCOUNTS_TABLE + "(id INTEGER PRIMARY KEY, email TEXT, password TEXT)");
             db.execSQL("CREATE TABLE " + PHOTOS_TABLE + "(id INTEGER PRIMARY KEY, filename TEXT, date TEXT, size TEXT, path TEXT, pinLock INTEGER DEFAULT 0, locationLock INTEGER DEFAULT 0, UNIQUE(path))");
-            db.execSQL("CREATE TABLE " + LOCATION_TABLE + "(id INTEGER, coordinates TEXT, radius TEXT, FOREIGN KEY(id) REFERENCES " + PHOTOS_TABLE + "(id))");
-            db.execSQL("CREATE TABLE " + PIN_TABLE + "(id INTEGER, passcode TEXT, FOREIGN KEY(id) REFERENCES " + PHOTOS_TABLE + "(id))");
-            db.execSQL("ALTER TABLE " + LOCATION_TABLE + " ADD COLUMN replacementfk INTEGER REFERENCES " + PHOTOS_TABLE + "(id)");
-            db.execSQL("ALTER TABLE " + PIN_TABLE + " ADD COLUMN replacementfk INTEGER REFERENCES " + PHOTOS_TABLE + "(id)");
+            db.execSQL("CREATE TABLE " + LOCATION_TABLE + "(id INTEGER, coordinates TEXT, radius TEXT, originalID INTEGER, replacementID INTEGER, FOREIGN KEY(originalID) REFERENCES " + PHOTOS_TABLE + "(id), FOREIGN KEY(replacementID) REFERENCES " + PHOTOS_TABLE + "(id))");
+            db.execSQL("CREATE TABLE " + PIN_TABLE + "(id INTEGER, passcode TEXT, originalID INTEGER, replacementID INTEGER, FOREIGN KEY(originalID) REFERENCES " + PHOTOS_TABLE + "(id), FOREIGN KEY(replacementID) REFERENCES " + PHOTOS_TABLE + "(id))");
         }
 
         @Override

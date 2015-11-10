@@ -30,6 +30,7 @@ public class DatabaseHelper {
     private static final String FIND_PIN_REPLACEMENT = "SELECT replacementFK FROM " + PIN_TABLE + " p WHERE p.originalFK=?";
     private static final String GET_PHOTO_DETAILS = "SELECT path, filename, size, date FROM " + PHOTOS_TABLE + " p WHERE p.ID=?";
     private static final String ENABLE_LOCK_PIN = "UPDATE " + PHOTOS_TABLE + " SET pinLock=1 WHERE path=?";
+    private static final String ENABLE_LOCATION_PIN = "UPDATE " + PHOTOS_TABLE + " SET locationLock=1 WHERE path=?";
     private static final String SET_REPLACEMENT_PHOTO = "UPDATE " + PIN_TABLE + " SET replacementFK=?, passcode=? WHERE originalFK=?";
 
 
@@ -72,6 +73,17 @@ public class DatabaseHelper {
             cursor.close();
         }
         return result;
+    }
+
+    public void enableLocationLock(String filePath, String coordinates){
+        //Set pin lock status to true
+        Cursor cursor = db.rawQuery(ENABLE_LOCATION_PIN, new String[]{filePath});
+        cursor.moveToFirst();
+        cursor.close();
+        //Update thumbnail
+        Cursor cursor2 = db.rawQuery(SET_REPLACEMENT_PHOTO, new String[]{String.valueOf(returnID(coordinates)), UUID.randomUUID().toString(), String.valueOf(returnID(filePath))});
+        cursor2.moveToFirst();
+        cursor2.close();
     }
 
     public void enablePinLock(String filePath, String replacementPath){

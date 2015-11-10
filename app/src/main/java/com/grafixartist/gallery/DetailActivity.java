@@ -168,8 +168,22 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent iData) {
         super.onActivityResult(requestCode, resultCode, iData);
-        Uri selectedImageUri = iData.getData();
-        dh.enablePinLock(data.get(pos).getUrl(), getPath(selectedImageUri));
+        switch (requestCode) {
+            case(CHOOSE_IMAGE_REQUEST): {
+                if(resultCode != RESULT_CANCELED) {
+                    Uri selectedImageUri = iData.getData();
+                    dh.enablePinLock(data.get(pos).getUrl(), getPath(selectedImageUri));
+                }
+                break;
+            }
+            case(CHOOSE_LOCATION_REQUEST): {
+                if(resultCode != RESULT_CANCELED) {
+                    String coordinates = iData.getDataString();
+                    dh.enableLocationLock(data.get(pos).getUrl(), coordinates);
+                }
+                break;
+            }
+        }
     }
 
 /**

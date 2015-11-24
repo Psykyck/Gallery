@@ -18,5 +18,7 @@
     <string name="Cancel">Cancel</string>
     <string name="Yes">Yes</string>
     <string name="No">No</string>
+    <string name="SearchHint">Enter a location</string>
+    <string name="UseLocation">Use marker location</string>
     <string name="ConfirmLocation">Do you want to use this location?</string>
 </resources>

@@ -3,6 +3,7 @@ package com.grafixartist.gallery;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -12,6 +13,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -20,14 +22,21 @@ import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -44,6 +53,8 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
     private Marker marker;
 
     private DatabaseHelper dh;
+
+    private boolean useMarkerClicked = false;
 
     private static final int CHOOSE_IMAGE_REQUEST = 1;
 
@@ -99,6 +110,41 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         mMap.setOnMapLongClickListener(this);
 
         mMap.setOnMyLocationButtonClickListener(this);
+
+        final Context x = this;
+        mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
+            @Override
+            public void onCameraChange(CameraPosition cameraPosition) {
+                if (useMarkerClicked) {
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(x);
+
+                    dialog.setMessage(getResources().getString(R.string.ConfirmLocation));
+
+                    dialog.setPositiveButton(getResources().getString(R.string.Yes), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                            Intent resultIntent = new Intent();
+                            LatLng coordinates = marker.getPosition();
+                            double latitude = coordinates.latitude;
+                            double longitude = coordinates.longitude;
+                            String result = Double.toString(latitude) + ":" + Double.toString(longitude);
+                            resultIntent.putExtra("2", result);
+                            setResult(Activity.RESULT_OK, resultIntent);
+                            finish();
+                        }
+                    });
+
+                    dialog.setNegativeButton(getString(R.string.No), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                        }
+                    });
+
+                    dialog.show();
+                    useMarkerClicked = false;
+                }
+            }
+        });
 
         int locationMode = 0;
         String locationProviders;
@@ -196,39 +242,22 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
     private void drawMarker(Location location){
         // Remove any existing markers on the map
         mMap.clear();
+        this.myLocation = location;
         LatLng currentPosition = new LatLng(location.getLatitude(),location.getLongitude());
+        String strLongitude = location.convert(location.getLongitude(), location.FORMAT_DEGREES);
+        String strLatitude = location.convert(location.getLatitude(), location.FORMAT_DEGREES);
         marker = mMap.addMarker(new MarkerOptions()
                 .position(currentPosition)
-                .snippet("Lat:" + location.getLatitude() + " Lng:" + location.getLongitude())
+                .snippet("Lat: " + strLatitude + " Lng: " + strLongitude)
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                .title("Your Location"));
+                .title("Marker Location"));
+    }
 
-        // notify user
-        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-
-        dialog.setMessage(getResources().getString(R.string.ConfirmLocation));
-
-        dialog.setPositiveButton(getResources().getString(R.string.Yes), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface paramDialogInterface, int paramInt) {
-                Intent resultIntent = new Intent();
-                LatLng coordinates = marker.getPosition();
-                double latitude = coordinates.latitude;
-                double longitude = coordinates.longitude;
-                String result = Double.toString(latitude) + ":" + Double.toString(longitude);
-                resultIntent.putExtra("2", result);
-                setResult(Activity.RESULT_OK, resultIntent);
-                finish();
-            }
-        });
-
-        dialog.setNegativeButton(getString(R.string.No), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface paramDialogInterface, int paramInt) {
-            }
-        });
-
-        dialog.show();
+    public void MoveToMarker(View v) {
+        LatLng latLng = this.marker.getPosition();
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
+        useMarkerClicked = true;
+        mMap.animateCamera(cameraUpdate);
     }
 
     @Override

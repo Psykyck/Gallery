@@ -35,7 +35,7 @@ public class AccountFragment extends Fragment implements OnClickListener {
     }
 
     private void CreateAccount(){
-    	String email = etEmail.getText().toString();
+    	String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString();
         String confirm	= etConfirm.getText().toString();
         this.dh = new DatabaseHelper(this.getContext());

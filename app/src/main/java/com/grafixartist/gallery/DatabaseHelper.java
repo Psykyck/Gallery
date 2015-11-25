@@ -3,6 +3,7 @@ package com.grafixartist.gallery;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
@@ -24,10 +25,12 @@ public class DatabaseHelper {
     private SQLiteDatabase db;
     private SQLiteStatement insertStmt;
     private SQLiteStatement insertPhotoStmt;
+    private SQLiteStatement insertPinStmt;
     private static final String INSERT_PHOTO = "INSERT OR IGNORE INTO " + PHOTOS_TABLE + "(path, filename, date, size) values (?, ?, ?, ?)" ;
     private static final String INSERT = "INSERT INTO " + ACCOUNTS_TABLE + "(email, password) values (?, ?)" ;
+    private static final String INSERT_PIN = "INSERT OR IGNORE INTO " + PIN_TABLE + "(passcode, originalFK, replacementFK) values (?, ?, ?)" ;
     private static final String FIND_ID = "SELECT id FROM " + PHOTOS_TABLE + " pt WHERE pt.path=?";
-    private static final String FIND_PIN_REPLACEMENT = "SELECT replacementFK FROM " + PIN_TABLE + " WHERE originalFK=?";
+    private static final String FIND_PIN_REPLACEMENT = "SELECT * FROM " + PIN_TABLE + " p WHERE p.originalFK=?";
     private static final String GET_PHOTO_DETAILS = "SELECT path, filename, size, date FROM " + PHOTOS_TABLE + " p WHERE p.ID=?";
     private static final String ENABLE_LOCK_PIN = "UPDATE " + PHOTOS_TABLE + " SET pinLock=1 WHERE path=?";
     private static final String ENABLE_LOCATION_PIN = "UPDATE " + PHOTOS_TABLE + " SET locationLock=1 WHERE path=?";
@@ -40,12 +43,20 @@ public class DatabaseHelper {
         this.db = openHelper.getWritableDatabase();
         this.insertStmt = this.db.compileStatement(INSERT);
         this.insertPhotoStmt = this.db.compileStatement(INSERT_PHOTO);
+        this.insertPinStmt = this.db.compileStatement(INSERT_PIN);
     }
 
     public long insert(String email, String password) {
         this.insertStmt.bindString(1, email);
         this.insertStmt.bindString(2, password);
         return this.insertStmt.executeInsert();
+    }
+
+    public long insertPin(String filePath){
+        this.insertPinStmt.bindString(1, String.valueOf(0));
+        this.insertPinStmt.bindString(2, String.valueOf(returnID(filePath)));
+        this.insertPinStmt.bindString(3, String.valueOf(returnID(filePath)));
+        return this.insertPinStmt.executeInsert();
     }
 
     public long insertPhoto(String path, String filename, String date, String size){
@@ -104,7 +115,7 @@ public class DatabaseHelper {
         if(cursor.moveToFirst()){
             id = cursor.getInt(0);
         }
-        //cursor.close();
+        cursor.close();
         return getPhotoDetails(id);
     }
 
@@ -210,8 +221,8 @@ public class DatabaseHelper {
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE " + ACCOUNTS_TABLE + "(id INTEGER PRIMARY KEY, email TEXT, password TEXT)");
             db.execSQL("CREATE TABLE " + PHOTOS_TABLE + "(id INTEGER PRIMARY KEY, filename TEXT, date TEXT, size TEXT, path TEXT, pinLock INTEGER DEFAULT 0, locationLock INTEGER DEFAULT 0, UNIQUE(path))");
-            db.execSQL("CREATE TABLE " + LOCATION_TABLE + "(id INTEGER, coordinates TEXT, radius TEXT, originalFK INTEGER, replacementFK INTEGER, FOREIGN KEY(originalFK) REFERENCES " + PHOTOS_TABLE + "(id), FOREIGN KEY(replacementFK) REFERENCES " + PHOTOS_TABLE + "(id))");
-            db.execSQL("CREATE TABLE " + PIN_TABLE + "(id INTEGER, passcode TEXT, originalFK INTEGER, replacementFK INTEGER, FOREIGN KEY(originalFK) REFERENCES " + PHOTOS_TABLE + "(id), FOREIGN KEY(replacementFK) REFERENCES " + PHOTOS_TABLE + "(id))");
+            db.execSQL("CREATE TABLE " + LOCATION_TABLE + "(id INTEGER PRIMARY KEY, coordinates TEXT, radius TEXT, originalFK INTEGER, replacementFK INTEGER, FOREIGN KEY(originalFK) REFERENCES " + PHOTOS_TABLE + "(id), FOREIGN KEY(replacementFK) REFERENCES " + PHOTOS_TABLE + "(id))");
+            db.execSQL("CREATE TABLE " + PIN_TABLE + "(id INTEGER PRIMARY KEY, passcode TEXT, originalFK INTEGER, replacementFK INTEGER, FOREIGN KEY(originalFK) REFERENCES " + PHOTOS_TABLE + "(id), FOREIGN KEY(replacementFK) REFERENCES " + PHOTOS_TABLE + "(id))");
         }
 
         @Override

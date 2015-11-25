@@ -47,7 +47,7 @@ public class Login extends FragmentActivity implements View.OnClickListener {
      }
     
     private void checkLogin() {
-        String email = this.emailEditableField.getText().toString();
+        String email = this.emailEditableField.getText().toString().trim();
         String password = this.passwordEditableField.getText().toString();
         this.dh = new DatabaseHelper(this);
         List<String> names = this.dh.selectAll(email, password);

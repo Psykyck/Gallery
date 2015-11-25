@@ -194,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
             imgDate = cursor.getString(date_index_data);
             //Insert into db if not exists
             dh.insertPhoto(imgPath, imgName, imgDate, imgSize);
+            dh.insertPin(imgPath);
             Image img = new Image(imgPath, imgName, imgSize, imgDate);
             //Check if locked by password
             if(dh.checkPinLock(imgPath)){

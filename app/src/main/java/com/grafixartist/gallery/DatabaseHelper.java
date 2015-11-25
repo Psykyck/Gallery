@@ -75,13 +75,13 @@ public class DatabaseHelper {
         return result;
     }
 
-    public void enableLocationLock(String filePath, String coordinates){
+    public void enableLocationLock(String filePath, String coordinates, String replacementPath){
         //Set pin lock status to true
         Cursor cursor = db.rawQuery(ENABLE_LOCATION_PIN, new String[]{filePath});
         cursor.moveToFirst();
         cursor.close();
         //Update thumbnail
-        Cursor cursor2 = db.rawQuery(SET_REPLACEMENT_PHOTO, new String[]{String.valueOf(returnID(coordinates)), UUID.randomUUID().toString(), String.valueOf(returnID(filePath))});
+        Cursor cursor2 = db.rawQuery(SET_REPLACEMENT_PHOTO, new String[]{String.valueOf(returnID(replacementPath)), UUID.randomUUID().toString(), String.valueOf(returnID(filePath))});
         cursor2.moveToFirst();
         cursor2.close();
     }

@@ -7,7 +7,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
 import android.location.Criteria;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -26,6 +28,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,6 +46,10 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLongClickListener, GoogleMap.OnMyLocationButtonClickListener, OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback  {
 
@@ -87,8 +94,8 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         Toast.makeText(this, "Finding your location", Toast.LENGTH_SHORT).show();
         // Return false so that we don't consume the event and the default behavior still occurs
         // (the camera animates to the user's current position).
-        if (myLocation != null) {
-            drawMarker(myLocation);
+        if (this.myLocation != null) {
+            drawMarker(this.myLocation);
         }
         return false;
     }
@@ -123,14 +130,8 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
                     dialog.setPositiveButton(getResources().getString(R.string.Yes), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface paramDialogInterface, int paramInt) {
-                            Intent resultIntent = new Intent();
-                            LatLng coordinates = marker.getPosition();
-                            double latitude = coordinates.latitude;
-                            double longitude = coordinates.longitude;
-                            String result = Double.toString(latitude) + ":" + Double.toString(longitude);
-                            resultIntent.putExtra("2", result);
-                            setResult(Activity.RESULT_OK, resultIntent);
-                            finish();
+                            Intent i = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                            startActivityForResult(i, CHOOSE_IMAGE_REQUEST);
                         }
                     });
 
@@ -303,4 +304,76 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         drawMarker(location);
     }
 
+    public void getLocation(View view) {
+        try
+        {
+            EditText searchText = (EditText)findViewById(R.id.searchEditText);
+            Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+            List<Address> addresses = geocoder.getFromLocationName(searchText.getText().toString(), 1);
+            StringBuilder sb = new StringBuilder();
+            if (addresses != null && addresses.size() > 0)
+            {
+                final Address address = addresses.get(0);
+                AlertDialog.Builder adb = new AlertDialog.Builder(this);
+                for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
+                    sb.append(address.getAddressLine(i));
+                    sb.append(", ");
+                }
+                sb.delete(sb.length() - 2, sb.length());
+                adb.setTitle(R.string.SearchResult);
+                adb.setMessage(this.getString(R.string.SearchMessage) + sb);
+                adb.setPositiveButton(getResources().getString(R.string.Yes), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                        Location location = new Location(myLocation);
+                        location.setLatitude(address.getLatitude());
+                        location.setLongitude(address.getLongitude());
+                        drawMarker(location);
+                        LatLng latLng = marker.getPosition();
+                        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
+                        mMap.animateCamera(cameraUpdate);
+                    }
+                });
+                adb.setNegativeButton(getString(R.string.No), null);
+                adb.show();
+            }
+            else {
+                createAlertDialog();
+            }
+        }
+        catch (IOException e)
+        {
+            createAlertDialog();
+        }
+    }
+
+    private void createAlertDialog() {
+        AlertDialog.Builder adb = new AlertDialog.Builder(this);
+        adb.setTitle(R.string.InvalidTitle);
+        adb.setMessage(R.string.InvalidMessage);
+        adb.setPositiveButton(R.string.Close,null);
+        adb.show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent iData) {
+        super.onActivityResult(requestCode, resultCode, iData);
+        switch (requestCode) {
+            case(CHOOSE_IMAGE_REQUEST): {
+                if(resultCode != RESULT_CANCELED) {
+                    Intent resultIntent = new Intent();
+                    LatLng coordinates = marker.getPosition();
+                    double latitude = coordinates.latitude;
+                    double longitude = coordinates.longitude;
+                    String result = Double.toString(latitude) + ":" + Double.toString(longitude);
+                    Uri selectedImageUri = iData.getData();
+                    resultIntent.putExtra("coordinates", result);
+                    resultIntent.putExtra("replacement", selectedImageUri);
+                    setResult(Activity.RESULT_OK, resultIntent);
+                    finish();
+                }
+                break;
+            }
+        }
+    }
 }

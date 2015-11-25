@@ -178,8 +178,9 @@ public class DetailActivity extends AppCompatActivity {
             }
             case(CHOOSE_LOCATION_REQUEST): {
                 if(resultCode != RESULT_CANCELED) {
-                    String coordinates = iData.getDataString();
-                    dh.enableLocationLock(data.get(pos).getUrl(), coordinates);
+                    String coordinates = iData.getStringExtra("coordinates");
+                    Uri selectedImageUri = Uri.parse(iData.getStringExtra("replacement"));
+                    dh.enableLocationLock(data.get(pos).getUrl(), coordinates, getPath(selectedImageUri));
                 }
                 break;
             }

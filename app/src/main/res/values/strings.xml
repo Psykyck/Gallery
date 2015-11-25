@@ -16,6 +16,11 @@
     <string name="gps_network_not_enabled">GPS is not enabled</string>
     <string name="open_location_settings">Open location settings</string>
     <string name="Cancel">Cancel</string>
+    <string name="SearchResult">Search Result</string>
+    <string name="SearchMessage">Is this the desired location?\n\n</string>
+    <string name="InvalidTitle">Invalid Location</string>
+    <string name="InvalidMessage">Please Provide the Proper Location</string>
+    <string name="Close">Close</string>
     <string name="Yes">Yes</string>
     <string name="No">No</string>
     <string name="SearchHint">Enter a location</string>

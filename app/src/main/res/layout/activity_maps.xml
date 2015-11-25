@@ -61,7 +61,7 @@
         android:orientation="horizontal">
 
         <EditText
-            android:id="@+id/editText"
+            android:id="@+id/searchEditText"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:layout_weight="1"
@@ -73,12 +73,12 @@
             android:width="240dp" />
 
         <Button
-            android:id="@+id/GeoLocate"
+            android:id="@+id/getLocationButton"
             android:layout_width="20dp"
             android:layout_marginBottom="10dp"
             android:layout_height="50dp"
             android:layout_weight="1"
-            android:onClick="geoLocate"
+            android:onClick="getLocation"
             android:background="@drawable/yes_button" />
     </LinearLayout>
 

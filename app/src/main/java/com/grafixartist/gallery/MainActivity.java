@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Path;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -14,14 +13,11 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.ContextMenu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -42,14 +38,7 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "onCreate() called");
         setContentView(R.layout.activity_main);
 
-        ArrayList<Image> IMGS = getImagesPath(MainActivity.this);
-
-        for (int i = 0; i < IMGS.size(); i++) {
-            ImageModel imageModel = new ImageModel();
-            imageModel.setName(IMGS.get(i).getName());
-            imageModel.setUrl(IMGS.get(i).getPath());
-            data.add(imageModel);
-        }
+        setUpImageModels(MainActivity.this);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -148,25 +137,17 @@ public class MainActivity extends AppCompatActivity {
             alert.show();
             return true;
         }
-        if(id == R.id.action_logout){
-            return true;
-        }
 
-        return super.onOptionsItemSelected(item);
+        return id == R.id.action_logout || super.onOptionsItemSelected(item);
     }
 
-    public ArrayList<Image> getImagesPath(Activity activity) {
+    public void setUpImageModels(Activity activity) {
         Uri uri;
         ArrayList<Image> listOfAllImages = new ArrayList<>();
+        ArrayList<Image> listOfOrigImages = new ArrayList<>();
         Cursor cursor;
-        int column_index_data;
-        int title_index_data;
-        int size_index_data;
-        int date_index_data;
-        String imgPath;
-        String imgSize;
-        String imgName;
-        String imgDate;
+        int column_index_data, title_index_data, size_index_data, date_index_data;
+        String imgPath, imgSize, imgName, imgDate;
         this.dh = new DatabaseHelper(this);
         uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
@@ -195,15 +176,24 @@ public class MainActivity extends AppCompatActivity {
             //Insert into db if not exists
             dh.insertPhoto(imgPath, imgName, imgDate, imgSize);
             dh.insertPin(imgPath);
+            dh.insertLoc(imgPath);
             Image img = new Image(imgPath, imgName, imgSize, imgDate);
+            listOfOrigImages.add(img);
             //Check if locked by password
-            if(dh.checkPinLock(imgPath)){
+            if(dh.checkPinLock(imgPath) || dh.checkLocLock(imgPath)){
                 img = dh.getReplacementPhoto(imgPath);
             }
             listOfAllImages.add(img);
         }
         cursor.close();
-        return listOfAllImages;
+
+        for (int i = 0; i < listOfAllImages.size(); i++) {
+            ImageModel imageModel = new ImageModel();
+            imageModel.setName(listOfAllImages.get(i).getName());
+            imageModel.setUrl(listOfAllImages.get(i).getPath());
+            imageModel.setOriginalUrl(listOfOrigImages.get(i).getPath());
+            data.add(imageModel);
+        }
     }
 
 }

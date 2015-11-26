@@ -107,7 +107,7 @@ public class DetailActivity extends AppCompatActivity {
         MenuItem lockPass = menu.findItem(R.id.action_lock_pass);
         MenuItem lockLoc = menu.findItem(R.id.action_lock_loc);
         MenuItem unlock = menu.findItem(R.id.action_unlock);
-        if(dh.checkPinLock(data.get(pos).getUrl()) || dh.checkLocLock(data.get(pos).getUrl())){ //is already locked
+        if(dh.checkPinLock(data.get(pos).getOriginalUrl()) || dh.checkLocLock(data.get(pos).getOriginalUrl())){ //is already locked
             lockPass.setEnabled(false);
             lockLoc.setEnabled(false);
             unlock.setEnabled(true);
@@ -172,7 +172,7 @@ public class DetailActivity extends AppCompatActivity {
             case(CHOOSE_IMAGE_REQUEST): {
                 if(resultCode != RESULT_CANCELED) {
                     Uri selectedImageUri = iData.getData();
-                    dh.enablePinLock(data.get(pos).getUrl(), getPath(selectedImageUri));
+                    dh.enablePinLock(data.get(pos).getOriginalUrl(), getPath(selectedImageUri));
                 }
                 break;
             }
@@ -180,7 +180,7 @@ public class DetailActivity extends AppCompatActivity {
                 if(resultCode != RESULT_CANCELED) {
                     String coordinates = iData.getStringExtra("coordinates");
                     Uri selectedImageUri = Uri.parse(iData.getStringExtra("replacement"));
-                    dh.enableLocationLock(data.get(pos).getUrl(), coordinates, getPath(selectedImageUri));
+                    dh.enableLocationLock(data.get(pos).getOriginalUrl(), coordinates, getPath(selectedImageUri));
                 }
                 break;
             }

@@ -180,8 +180,11 @@ public class MainActivity extends AppCompatActivity {
             Image img = new Image(imgPath, imgName, imgSize, imgDate);
             listOfOrigImages.add(img);
             //Check if locked by password
-            if(dh.checkPinLock(imgPath) || dh.checkLocLock(imgPath)){
-                img = dh.getReplacementPhoto(imgPath);
+            if(dh.checkPinLock(imgPath)){
+                img = dh.getReplacementPhoto(imgPath, 1);
+            }
+            else if(dh.checkLocLock(imgPath)) {
+                img = dh.getReplacementPhoto(imgPath, 2);
             }
             listOfAllImages.add(img);
         }

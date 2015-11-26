@@ -31,6 +31,7 @@ public class DatabaseHelper {
     private static final String INSERT_LOC = "INSERT OR IGNORE INTO " + LOCATION_TABLE + "(coordinates, originalFK, replacementFK) values (?, ?, ?)" ;
     private static final String FIND_ID = "SELECT id FROM " + PHOTOS_TABLE + " pt WHERE pt.path=?";
     private static final String FIND_PIN_REPLACEMENT = "SELECT replacementFK FROM " + PIN_TABLE + " p WHERE p.originalFK=?";
+    private static final String FIND_LOC_REPLACEMENT = "SELECT replacementFK FROM " + LOCATION_TABLE + " p WHERE p.originalFK=?";
     private static final String GET_PHOTO_DETAILS = "SELECT path, filename, size, date FROM " + PHOTOS_TABLE + " p WHERE p.ID=?";
     private static final String ENABLE_LOCK_PIN = "UPDATE " + PHOTOS_TABLE + " SET pinLock=1 WHERE path=?";
     private static final String ENABLE_LOCATION_PIN = "UPDATE " + PHOTOS_TABLE + " SET locationLock=1 WHERE path=?";
@@ -45,6 +46,7 @@ public class DatabaseHelper {
         this.insertStmt = this.db.compileStatement(INSERT);
         this.insertPhotoStmt = this.db.compileStatement(INSERT_PHOTO);
         this.insertPinStmt = this.db.compileStatement(INSERT_PIN);
+        this.insertLocStmt = this.db.compileStatement(INSERT_LOC);
     }
 
     public long insert(String email, String password) {
@@ -62,8 +64,8 @@ public class DatabaseHelper {
 
     public long insertLoc(String filePath){
         this.insertLocStmt.bindString(1, "");
+        this.insertLocStmt.bindString(2, String.valueOf(returnID(filePath)));
         this.insertLocStmt.bindString(3, String.valueOf(returnID(filePath)));
-        this.insertLocStmt.bindString(4, String.valueOf(returnID(filePath)));
         return this.insertLocStmt.executeInsert();
     }
 
@@ -131,14 +133,28 @@ public class DatabaseHelper {
         cursor2.close();
     }
 
-    public Image getReplacementPhoto(String filepath){
+    public Image getReplacementPhoto(String filepath, int type){
         int id = 1;
         //Find id of replacement photo
-        Cursor cursor = db.rawQuery(FIND_PIN_REPLACEMENT, new String[]{String.valueOf(returnID(filepath))});
-        if(cursor.moveToFirst()){
-            id = cursor.getInt(0);
+        switch(type) {
+            case(1): {
+                Cursor cursor = db.rawQuery(FIND_PIN_REPLACEMENT, new String[]{String.valueOf(returnID(filepath))});
+                if(cursor.moveToFirst()){
+                    id = cursor.getInt(0);
+                }
+                cursor.close();
+                break;
+            }
+            case(2): {
+                Cursor cursor = db.rawQuery(FIND_LOC_REPLACEMENT, new String[]{String.valueOf(returnID(filepath))});
+                if(cursor.moveToFirst()){
+                    id = cursor.getInt(0);
+                }
+                cursor.close();
+                break;
+            }
         }
-        cursor.close();
+
         return getPhotoDetails(id);
     }
 

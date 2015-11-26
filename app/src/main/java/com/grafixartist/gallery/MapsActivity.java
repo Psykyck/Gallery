@@ -23,6 +23,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.NumberPicker;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
@@ -37,6 +38,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -52,7 +54,11 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
 
     private boolean useMarkerClicked = false;
 
+    private int radius = 50;
+
     private static final int CHOOSE_IMAGE_REQUEST = 1;
+
+    private static final int ENABLE_LOCATION_REQUEST = 2;
 
     /**
      * Request code for location permission request.
@@ -80,11 +86,13 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
 
     @Override
     public boolean onMyLocationButtonClick() {
-        Toast.makeText(this, "Finding your location", Toast.LENGTH_SHORT).show();
         // Return false so that we don't consume the event and the default behavior still occurs
         // (the camera animates to the user's current position).
         if (this.myLocation != null) {
             drawMarker(this.myLocation);
+        }
+        else {
+            Toast.makeText(this, getString(R.string.WaitingLocationToast), Toast.LENGTH_SHORT).show();
         }
         return false;
     }
@@ -108,34 +116,21 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         mMap.setOnMyLocationButtonClickListener(this);
 
         final Context x = this;
+
         mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
             @Override
             public void onCameraChange(CameraPosition cameraPosition) {
                 if (useMarkerClicked) {
-                    AlertDialog.Builder dialog = new AlertDialog.Builder(x);
-
-                    dialog.setMessage(getResources().getString(R.string.ConfirmLocation));
-
-                    dialog.setPositiveButton(getResources().getString(R.string.Yes), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface paramDialogInterface, int paramInt) {
-                            Intent i = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                            startActivityForResult(i, CHOOSE_IMAGE_REQUEST);
-                        }
-                    });
-
-                    dialog.setNegativeButton(getString(R.string.No), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface paramDialogInterface, int paramInt) {
-                        }
-                    });
-
-                    dialog.show();
-                    useMarkerClicked = false;
+                    useLocationConfirmation(x);
                 }
             }
         });
 
+        checkLocationOn();
+        enableMyLocation();
+    }
+
+    private void checkLocationOn() {
         int locationMode = 0;
         String locationProviders;
 
@@ -160,17 +155,25 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
     private void enableGPSDialog() {
         // notify user
         AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-        dialog.setMessage(getResources().getString(R.string.gps_network_not_enabled));
-        dialog.setPositiveButton(getResources().getString(R.string.open_location_settings), new DialogInterface.OnClickListener() {
+        dialog.setTitle(getString(R.string.gps_not_enabled_title));
+        dialog.setMessage(getString(R.string.gps_not_enabled_message));
+        dialog.setPositiveButton(getString(R.string.open_location_settings), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface paramDialogInterface, int paramInt) {
                 Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                startActivity(myIntent);
+                startActivityForResult(myIntent, ENABLE_LOCATION_REQUEST);
             }
         });
         dialog.setNegativeButton(getString(R.string.Cancel), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                finish();
+            }
+        });
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                finish();
             }
         });
         dialog.show();
@@ -189,13 +192,10 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
             if (mMap != null) {
                 // Access to the location has been granted to the app.
                 mMap.setMyLocationEnabled(true);
-
                 // Getting LocationManager object from System Service LOCATION_SERVICE
                 LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-
                 // Getting Current Location
                 Location location = locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
-
                 LocationListener locationListener = new LocationListener() {
                     public void onLocationChanged(Location location) {
                         // redraw the marker when get location update.
@@ -223,7 +223,6 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
 //                location = mMap.getMyLocation();
 //                drawMarker(location);
 //            }
-
                 locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 0, locationListener);
             }
         }
@@ -244,10 +243,15 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
     }
 
     public void MoveToMarker(View v) {
-        LatLng latLng = this.marker.getPosition();
-        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
-        useMarkerClicked = true;
-        mMap.animateCamera(cameraUpdate);
+        if(this.marker != null) {
+            LatLng latLng = this.marker.getPosition();
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
+            useMarkerClicked = true;
+            mMap.animateCamera(cameraUpdate);
+        }
+        else {
+            Toast.makeText(this, getString(R.string.MakeMarkerToast), Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -311,7 +315,7 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
                 sb.delete(sb.length() - 2, sb.length());
                 adb.setTitle(R.string.SearchResult);
                 adb.setMessage(this.getString(R.string.SearchMessage) + sb);
-                adb.setPositiveButton(getResources().getString(R.string.Yes), new DialogInterface.OnClickListener() {
+                adb.setPositiveButton(getString(R.string.Yes), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface paramDialogInterface, int paramInt) {
                         Location location = new Location(myLocation);
@@ -356,13 +360,77 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
                     double longitude = coordinates.longitude;
                     String result = Double.toString(latitude) + ":" + Double.toString(longitude);
                     Uri selectedImageUri = iData.getData();
+                    resultIntent.putExtra("radius", radius);
                     resultIntent.putExtra("coordinates", result);
-                    resultIntent.putExtra("replacement", selectedImageUri);
+                    resultIntent.putExtra("replacement", selectedImageUri.toString());
                     setResult(Activity.RESULT_OK, resultIntent);
                     finish();
                 }
                 break;
             }
+            case(ENABLE_LOCATION_REQUEST): {
+                checkLocationOn();
+                break;
+            }
         }
+    }
+
+    private void useLocationConfirmation(Context x) {
+        final Context a = x;
+
+        AlertDialog.Builder dialog = new AlertDialog.Builder(x);
+
+        dialog.setMessage(getResources().getString(R.string.ConfirmLocation));
+
+        dialog.setPositiveButton(getResources().getString(R.string.Yes), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                getRadiusConfirmation(a);
+            }
+        });
+
+        dialog.setNegativeButton(getString(R.string.No), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+            }
+        });
+
+        dialog.show();
+        useMarkerClicked = false;
+    }
+
+    private void getRadiusConfirmation(Context x) {
+
+        AlertDialog.Builder dialog = new AlertDialog.Builder(x);
+
+        dialog.setTitle(R.string.RadiusAlertTitle);
+
+        dialog.setMessage(R.string.RadiusAlertMessage);
+
+        final ArrayList<String> numbersAsStrings = new ArrayList<>();
+
+        for (int i = 1; i <= 10; i++) {
+            numbersAsStrings.add(String.valueOf(i * 50));
+        }
+
+        final NumberPicker numberPicker = new NumberPicker(this);
+        numberPicker.setMinValue(0);
+        numberPicker.setMaxValue(numbersAsStrings.size() - 1);
+        numberPicker.setDisplayedValues(numbersAsStrings.toArray(new String[numbersAsStrings.size()]));
+
+        dialog.setPositiveButton(getString(R.string.Okay), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                radius = numberPicker.getValue();
+                Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(i, CHOOSE_IMAGE_REQUEST);
+            }
+        });
+
+        dialog.setNegativeButton(getString(R.string.Cancel), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+            }
+        });
+
+        dialog.setView(numberPicker).show();
     }
 }

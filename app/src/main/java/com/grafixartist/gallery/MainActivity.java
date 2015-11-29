@@ -23,10 +23,14 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
 
     GalleryAdapter mAdapter;
+
     RecyclerView mRecyclerView;
-    private static int x=0;
+
+    private static int x = 0;
 
     private static final String TAG = "MainActivity";
+
+    private static final int LOCK_UNLOCK_ACTION = 1;
 
     ArrayList<ImageModel> data = new ArrayList<>();
 
@@ -58,10 +62,24 @@ public class MainActivity extends AppCompatActivity {
                         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
                         intent.putParcelableArrayListExtra("data", data);
                         intent.putExtra("pos", position);
-                        startActivity(intent);
+                        startActivityForResult(intent, LOCK_UNLOCK_ACTION);
                     }
                 }));
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent iData) {
+        super.onActivityResult(requestCode, resultCode, iData);
+        switch (requestCode) {
+            case(LOCK_UNLOCK_ACTION): {
+                if(resultCode != RESULT_CANCELED) {
+                    finish();
+                    startActivity(getIntent());
+                }
+                break;
+            }
+        }
     }
 
     @Override

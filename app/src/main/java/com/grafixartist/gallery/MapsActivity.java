@@ -414,14 +414,16 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         }
 
         final NumberPicker numberPicker = new NumberPicker(this);
+        numberPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
         numberPicker.setMinValue(0);
         numberPicker.setMaxValue(numbersAsStrings.size() - 1);
         numberPicker.setDisplayedValues(numbersAsStrings.toArray(new String[numbersAsStrings.size()]));
 
         dialog.setPositiveButton(getString(R.string.Okay), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                radius = numberPicker.getValue();
+                int index = numberPicker.getValue();
                 Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                radius = Integer.parseInt(numbersAsStrings.get(index));
                 startActivityForResult(i, CHOOSE_IMAGE_REQUEST);
             }
         });

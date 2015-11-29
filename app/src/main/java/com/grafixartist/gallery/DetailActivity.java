@@ -1,19 +1,30 @@
 package com.grafixartist.gallery;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -27,6 +38,8 @@ import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 
+import static android.support.v4.app.ActivityCompat.startActivityForResult;
+
 public class DetailActivity extends AppCompatActivity {
 
     /**
@@ -37,16 +50,25 @@ public class DetailActivity extends AppCompatActivity {
      * may be best to switch to a
      * {@link android.support.v4.app.FragmentStatePagerAdapter}.
      */
+
+    private int pos;
+    private Toolbar toolbar;
+    private DatabaseHelper dh;
+    private String replacementPath;
+    private Location myLocation;
+
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
     private static final String TAG = "DetailActivity";
+
     private static final int CHOOSE_IMAGE_REQUEST = 1;
     private static final int CHOOSE_LOCATION_REQUEST = 2;
+    private static final int ENABLE_LOCATION_REQUEST = 3;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 4;
+
+    private LocationManager locationManager;
+
     public ArrayList<ImageModel> data = new ArrayList<>();
-    int pos;
-    Toolbar toolbar;
-    private DatabaseHelper dh;
-    private String replacementPath;
 
     /**
      * The {@link ViewPager} that will host the section contents.
@@ -107,15 +129,16 @@ public class DetailActivity extends AppCompatActivity {
         MenuItem lockPass = menu.findItem(R.id.action_lock_pass);
         MenuItem lockLoc = menu.findItem(R.id.action_lock_loc);
         MenuItem unlock = menu.findItem(R.id.action_unlock);
-        if(dh.checkPinLock(data.get(pos).getOriginalUrl()) || dh.checkLocLock(data.get(pos).getOriginalUrl())){ //is already locked
-            lockPass.setEnabled(false);
-            lockLoc.setEnabled(false);
-            unlock.setEnabled(true);
-        } else {
-            lockPass.setEnabled(true);
-            lockLoc.setEnabled(true);
-            unlock.setEnabled(false);
-        }
+
+        boolean checkPinLock = dh.checkPinLock(data.get(pos).getOriginalUrl()) || dh.checkLocLock(data.get(pos).getOriginalUrl());
+
+        lockPass.setEnabled(!checkPinLock);
+        lockLoc.setEnabled(!checkPinLock);
+        unlock.setEnabled(checkPinLock);
+
+        lockPass.setVisible(!checkPinLock);
+        lockLoc.setVisible(!checkPinLock);
+        unlock.setVisible(checkPinLock);
     }
 
     @Override
@@ -142,27 +165,36 @@ public class DetailActivity extends AppCompatActivity {
         }
         //Unlock photo
         if (id == R.id.action_unlock) {
-            //if locked by pass
-                //pop-up asking for pass
-                //grab pass from db, email to logged in user
-                //if right pass
-                    //replace thumbnail
-                    //toast unlock success
-                    //return to image
-                //else
-                    //toast wrong pass
-            //if locked by loc
-                //call gps service
-                //check if user within coordinate radius
-                //if right pass
-                    //replace thumbnail
-                    //toast unlock success
-                //else
-                    //toast wrong location
 
+            if (dh.checkPinLock(data.get(pos).getOriginalUrl())) {
+                //if locked by pass
+                    //pop-up asking for pass
+                    //grab pass from db, email to logged in user
+                    //if right pass
+                        //replace thumbnail
+                        //toast unlock success
+                        //return to image
+                    //else
+                        //toast wrong pass
+            }
+            else {
+                checkLocationOn();
+                //if locked by loc
+                    //call gps service
+                    //check if user within coordinate radius
+                    //if right pass
+                        //replace thumbnail
+                        //toast unlock success
+                    //else
+                        //toast wrong location
+            }
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void checkLocationUnlock() {
+
     }
 
     @Override
@@ -173,17 +205,157 @@ public class DetailActivity extends AppCompatActivity {
                 if(resultCode != RESULT_CANCELED) {
                     Uri selectedImageUri = iData.getData();
                     dh.enablePinLock(data.get(pos).getOriginalUrl(), getPath(selectedImageUri));
+                    Intent resultIntent = new Intent();
+                    setResult(Activity.RESULT_OK, resultIntent);
+                    finish();
                 }
                 break;
             }
             case(CHOOSE_LOCATION_REQUEST): {
                 if(resultCode != RESULT_CANCELED) {
                     String coordinates = iData.getStringExtra("coordinates");
+                    String radius = Integer.toString(iData.getIntExtra("radius", 50));
                     Uri selectedImageUri = Uri.parse(iData.getStringExtra("replacement"));
-                    dh.enableLocationLock(data.get(pos).getOriginalUrl(), coordinates, getPath(selectedImageUri));
+                    dh.enableLocationLock(data.get(pos).getOriginalUrl(), coordinates, getPath(selectedImageUri), radius);
+                    Intent resultIntent = new Intent();
+                    setResult(Activity.RESULT_OK, resultIntent);
+                    finish();
                 }
                 break;
             }
+            case(ENABLE_LOCATION_REQUEST): {
+                checkLocationOn();
+
+                break;
+            }
+        }
+    }
+
+    private void checkLocationOn() {
+        int locationMode = 0;
+        String locationProviders;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            try {
+                locationMode = Settings.Secure.getInt(getContentResolver(), Settings.Secure.LOCATION_MODE);
+            } catch (Settings.SettingNotFoundException e) {
+                e.printStackTrace();
+            }
+            if(locationMode == Settings.Secure.LOCATION_MODE_OFF) {
+                enableGPSDialog();
+            }
+            else {
+                enableMyLocation();
+            }
+        } else{
+            locationProviders = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+            if(!TextUtils.isEmpty(locationProviders)) {
+                enableGPSDialog();
+            }
+            else {
+                enableMyLocation();
+            }
+        }
+    }
+
+    private void enableGPSDialog() {
+        // notify user
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle(getString(R.string.gps_not_enabled_title));
+        dialog.setMessage(getString(R.string.gps_not_enabled_message));
+        dialog.setPositiveButton(getString(R.string.open_location_settings), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivityForResult(myIntent, ENABLE_LOCATION_REQUEST);
+            }
+        });
+        dialog.setNegativeButton(getString(R.string.Cancel), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+            }
+        });
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+            }
+        });
+        dialog.show();
+    }
+
+    /**
+     * Enables the My Location layer if the fine location permission has been granted.
+     */
+    private void enableMyLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission to access the location is missing.
+            PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
+                    Manifest.permission.ACCESS_FINE_LOCATION, true);
+        } else {
+            // Getting LocationManager object from System Service LOCATION_SERVICE
+            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+            // Getting Current Location
+            Location location = locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
+            LocationListener locationListener = new LocationListener() {
+                public void onLocationChanged(Location location) {
+                    // redraw the marker when get location update.
+                    myLocation = location;
+                }
+
+                @Override
+                public void onStatusChanged(String provider, int status, Bundle extras) {
+                }
+
+                @Override
+                public void onProviderEnabled(String provider) {
+                }
+
+                @Override
+                public void onProviderDisabled(String provider) {
+                }
+            };
+
+            if (location != null) {
+                myLocation = location;
+            }
+
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 2400, 0, locationListener);
+
+            this.locationManager = locationManager;
+
+            final String path = data.get(pos).getOriginalUrl();
+            final ProgressDialog progress = new ProgressDialog(this);
+            progress.setTitle(getString(R.string.PleaseWaitTitle));
+            progress.setMessage(getString(R.string.SearchingLocation));
+            progress.setCancelable(false);
+            progress.show();
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    // Do something after 5s = 5000ms
+                    progress.dismiss();
+                    if (myLocation != null) {
+                        Toast.makeText(getApplicationContext(), "Location found!", Toast.LENGTH_LONG).show();
+                        String latitude = Double.toString(myLocation.getLatitude());
+                        String longitude = Double.toString(myLocation.getLongitude());
+                        String coordinates = latitude + ":" + longitude;
+                        boolean result = dh.checkUnlockLocation(coordinates, path);
+                        if (result) {
+                            Intent resultIntent = new Intent();
+                            setResult(Activity.RESULT_OK, resultIntent);
+                            finish();
+                        }
+                        else {
+                            Toast.makeText(getApplicationContext(), "Not within location!", Toast.LENGTH_LONG).show();
+                        }
+                    } else {
+                        Toast.makeText(getApplicationContext(), "No location!", Toast.LENGTH_LONG).show();
+                    }
+                }
+            }, 5000);
+
         }
     }
 

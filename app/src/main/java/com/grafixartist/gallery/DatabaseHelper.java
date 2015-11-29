@@ -34,10 +34,11 @@ public class DatabaseHelper {
     private static final String FIND_LOC_REPLACEMENT = "SELECT replacementFK FROM " + LOCATION_TABLE + " p WHERE p.originalFK=?";
     private static final String GET_PHOTO_DETAILS = "SELECT path, filename, size, date FROM " + PHOTOS_TABLE + " p WHERE p.ID=?";
     private static final String ENABLE_LOCK_PIN = "UPDATE " + PHOTOS_TABLE + " SET pinLock=1 WHERE path=?";
-    private static final String ENABLE_LOCATION_PIN = "UPDATE " + PHOTOS_TABLE + " SET locationLock=1 WHERE path=?";
+    private static final String ENABLE_LOCK_LOCATION = "UPDATE " + PHOTOS_TABLE + " SET locationLock=1 WHERE path=?";
+    private static final String DISABLE_LOCK_LOCATION = "UPDATE " + PHOTOS_TABLE + " SET locationLock=0 WHERE path=?";
     private static final String SET_PIN_REPLACEMENT_PHOTO = "UPDATE " + PIN_TABLE + " SET replacementFK=?, passcode=? WHERE originalFK=?";
-    private static final String SET_LOC_REPLACEMENT_PHOTO = "UPDATE " + LOCATION_TABLE + " SET coordinates=?, replacementFK=? WHERE originalFK=?";
-
+    private static final String SET_LOC_REPLACEMENT_PHOTO = "UPDATE " + LOCATION_TABLE + " SET radius = ?, coordinates=?, replacementFK=? WHERE originalFK=?";
+    private static final String UNLOCK_LOC_REPLACEMENT_PHOTO = "UPDATE " + LOCATION_TABLE + " SET replacementFK=? WHERE originalFK=?";
 
     public DatabaseHelper(Context context) {
         this.context = context;
@@ -122,13 +123,13 @@ public class DatabaseHelper {
         cursor2.close();
     }
 
-    public void enableLocationLock(String filePath, String coordinates, String replacementPath){
+    public void enableLocationLock(String filePath, String coordinates, String replacementPath, String radius){
         //Set pin lock status to true
-        Cursor cursor = db.rawQuery(ENABLE_LOCATION_PIN, new String[]{filePath});
+        Cursor cursor = db.rawQuery(ENABLE_LOCK_LOCATION, new String[]{filePath});
         cursor.moveToFirst();
         cursor.close();
         //Update thumbnail
-        Cursor cursor2 = db.rawQuery(SET_LOC_REPLACEMENT_PHOTO, new String[]{coordinates, String.valueOf(returnID(replacementPath)), String.valueOf(returnID(filePath))});
+        Cursor cursor2 = db.rawQuery(SET_LOC_REPLACEMENT_PHOTO, new String[]{radius, coordinates, String.valueOf(returnID(replacementPath)), String.valueOf(returnID(filePath))});
         cursor2.moveToFirst();
         cursor2.close();
     }
@@ -237,6 +238,7 @@ public class DatabaseHelper {
 
     public boolean checkUnlockLocation(String coordinates, String origFilePath){
         boolean result = false;
+
         Location loc = new Location("");
 
         String[] parseCoordinates = coordinates.split(":");
@@ -248,21 +250,36 @@ public class DatabaseHelper {
 
         int id = returnID(origFilePath);
 
-        Cursor cursor = this.db.query(LOCATION_TABLE, new String[]{"coordinates, originalFK"}, "originalFK = '" + id + "'", null, null, null, null);
+        Cursor cursor = this.db.query(LOCATION_TABLE, new String[]{"coordinates, originalFK, radius"}, "originalFK = '" + id + "'", null, null, null, null);
 
         if(cursor.moveToFirst()){
             String dbCoordinates = cursor.getString(0);
+            String originalFK = cursor.getString(1);
+            double radius = Double.parseDouble(cursor.getString(2));
             String[] parseDbCoordinates = dbCoordinates.split(":");
 
             Location db = new Location("");
-            db.setLatitude(Double.parseDouble(parseCoordinates[0]));
-            db.setLongitude(Double.parseDouble(parseCoordinates[1]));
+            db.setLatitude(Double.parseDouble(parseDbCoordinates[0]));
+            db.setLongitude(Double.parseDouble(parseDbCoordinates[1]));
 
-            float distance = loc.distanceTo(db);
-            if(distance < 100){
+            double distance = loc.distanceTo(db);
+            if(distance <= radius){
+                Cursor updateLock = this.db.rawQuery(DISABLE_LOCK_LOCATION, new String[]{origFilePath});
+                updateLock.moveToFirst();
+                updateLock.close();
+
+                Cursor updateReplacement = this.db.rawQuery(UNLOCK_LOC_REPLACEMENT_PHOTO, new String[]{originalFK, originalFK});
+                updateReplacement.moveToFirst();
+                updateReplacement.close();
+
                 result = true;
             }
         }
+
+        if (!cursor.isClosed()) {
+            cursor.close();
+        }
+
         return result;
     }
 
@@ -276,7 +293,7 @@ public class DatabaseHelper {
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE " + ACCOUNTS_TABLE + "(id INTEGER PRIMARY KEY, email TEXT, password TEXT)");
             db.execSQL("CREATE TABLE " + PHOTOS_TABLE + "(id INTEGER PRIMARY KEY, filename TEXT, date TEXT, size TEXT, path TEXT, pinLock INTEGER DEFAULT 0, locationLock INTEGER DEFAULT 0, UNIQUE(path))");
-            db.execSQL("CREATE TABLE " + LOCATION_TABLE + "(id INTEGER PRIMARY KEY, coordinates TEXT, originalFK INTEGER, replacementFK INTEGER, FOREIGN KEY(originalFK) REFERENCES " + PHOTOS_TABLE + "(id), FOREIGN KEY(replacementFK) REFERENCES " + PHOTOS_TABLE + "(id), UNIQUE(originalFK))");
+            db.execSQL("CREATE TABLE " + LOCATION_TABLE + "(id INTEGER PRIMARY KEY, coordinates TEXT, radius TEXT, originalFK INTEGER, replacementFK INTEGER, FOREIGN KEY(originalFK) REFERENCES " + PHOTOS_TABLE + "(id), FOREIGN KEY(replacementFK) REFERENCES " + PHOTOS_TABLE + "(id), UNIQUE(originalFK))");
             db.execSQL("CREATE TABLE " + PIN_TABLE + "(id INTEGER PRIMARY KEY, passcode TEXT, originalFK INTEGER, replacementFK INTEGER, FOREIGN KEY(originalFK) REFERENCES " + PHOTOS_TABLE + "(id), FOREIGN KEY(replacementFK) REFERENCES " + PHOTOS_TABLE + "(id), UNIQUE(originalFK))");
         }
 

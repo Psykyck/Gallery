@@ -4,13 +4,17 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -31,6 +35,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -38,41 +43,28 @@ import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 
-import static android.support.v4.app.ActivityCompat.startActivityForResult;
-
 public class DetailActivity extends AppCompatActivity {
-
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-     */
 
     private int pos;
     private Toolbar toolbar;
     private DatabaseHelper dh;
-    private String replacementPath;
     private Location myLocation;
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
     private static final String TAG = "DetailActivity";
 
+    private final String PREFS_NAME = "MyPrefsFile";
+
+    private final String EMAIL = "email";
+
     private static final int CHOOSE_IMAGE_REQUEST = 1;
     private static final int CHOOSE_LOCATION_REQUEST = 2;
     private static final int ENABLE_LOCATION_REQUEST = 3;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 4;
 
-    private LocationManager locationManager;
-
     public ArrayList<ImageModel> data = new ArrayList<>();
 
-    /**
-     * The {@link ViewPager} that will host the section contents.
-     */
     private ViewPager mViewPager;
 
     @Override
@@ -101,7 +93,6 @@ public class DetailActivity extends AppCompatActivity {
         mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
             }
 
             @Override
@@ -112,7 +103,6 @@ public class DetailActivity extends AppCompatActivity {
 
             @Override
             public void onPageScrollStateChanged(int state) {
-
             }
         });
     }
@@ -148,53 +138,97 @@ public class DetailActivity extends AppCompatActivity {
         int id = item.getItemId();
         //Lock photo by password
         if (id == R.id.action_lock_pass) {
-            //assign replacement thumbnail
-            Intent i = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            startActivityForResult(i, CHOOSE_IMAGE_REQUEST);
+            if(isNetworkAvailable(this)) {
+                Intent i = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(i, CHOOSE_IMAGE_REQUEST);
+            }
+            else {
+                Toast.makeText(this, getString(R.string.InternetNotAvailable), Toast.LENGTH_LONG).show();
+            }
             return true;
         }
         //Lock photo by location
         if (id == R.id.action_lock_loc) {
-            //assign replacement thumbnail
-            //user inputs coordinates
-            //user inputs radius
-            //set lock status to locked by location
-            Intent gps = new Intent(this, MapsActivity.class);
-            startActivityForResult(gps, CHOOSE_LOCATION_REQUEST);
+            if(isNetworkAvailable(this)) {
+                Intent gps = new Intent(this, MapsActivity.class);
+                startActivityForResult(gps, CHOOSE_LOCATION_REQUEST);
+            }
+            else {
+                Toast.makeText(this, getString(R.string.InternetNotAvailable), Toast.LENGTH_LONG).show();
+            }
             return true;
         }
         //Unlock photo
         if (id == R.id.action_unlock) {
-
             if (dh.checkPinLock(data.get(pos).getOriginalUrl())) {
-                //if locked by pass
-                    //pop-up asking for pass
-                    //grab pass from db, email to logged in user
-                    //if right pass
-                        //replace thumbnail
-                        //toast unlock success
-                        //return to image
-                    //else
-                        //toast wrong pass
+                if(isNetworkAvailable(this)) {
+                    final String UUID = dh.getPinUUID(data.get(pos).getOriginalUrl());
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+                            String email = settings.getString(EMAIL, "");
+                            try {
+                                GMailSender sender = new GMailSender(getString(R.string.GalleryEmail),
+                                        getString(R.string.GalleryPass));
+                                sender.sendMail(getString(R.string.EmailSubject), getString(R.string.EmailMessage) + UUID,
+                                        getString(R.string.GalleryEmail), email);
+                            } catch (Exception e) {
+                                Log.e("SendMail", e.getMessage(), e);
+                            }
+                        }
+                    }).start();
+
+                    LayoutInflater layoutInflater = LayoutInflater.from(this);
+
+                    View pinUnlockView = layoutInflater.inflate(R.layout.pin_unlock, null);
+
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+
+                    alertDialogBuilder.setView(pinUnlockView);
+
+                    final EditText input = (EditText) pinUnlockView.findViewById(R.id.pin_input);
+
+                    alertDialogBuilder
+                            .setCancelable(false)
+                            .setPositiveButton(getString(R.string.Okay), new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    // get user input and set it to result
+                                    if(input.getText().toString().trim().equals(UUID)) {
+                                        Toast.makeText(getApplicationContext(), getString(R.string.SuccessUnlocked), Toast.LENGTH_LONG).show();
+                                        dh.unlockPin(data.get(pos).getOriginalUrl());
+                                        Intent resultIntent = new Intent();
+                                        resultIntent.putExtra("result", true);
+                                        setResult(Activity.RESULT_OK, resultIntent);
+                                        finish();
+                                    }
+                                    else {
+                                        Toast.makeText(getApplicationContext(), getString(R.string.FailUnlockPin), Toast.LENGTH_LONG).show();
+                                    }
+                                }
+                            })
+                            .setNegativeButton(getString(R.string.Cancel),
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog,	int id) {
+                                            dialog.cancel();
+                                        }
+                                    });
+                    alertDialogBuilder.create().show();
+                }
             }
             else {
                 checkLocationOn();
-                //if locked by loc
-                    //call gps service
-                    //check if user within coordinate radius
-                    //if right pass
-                        //replace thumbnail
-                        //toast unlock success
-                    //else
-                        //toast wrong location
             }
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    public void checkLocationUnlock() {
-
+    private static boolean isNetworkAvailable(Context content) {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) content.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null;
     }
 
     @Override
@@ -206,6 +240,7 @@ public class DetailActivity extends AppCompatActivity {
                     Uri selectedImageUri = iData.getData();
                     dh.enablePinLock(data.get(pos).getOriginalUrl(), getPath(selectedImageUri));
                     Intent resultIntent = new Intent();
+                    resultIntent.putExtra("result", true);
                     setResult(Activity.RESULT_OK, resultIntent);
                     finish();
                 }
@@ -213,19 +248,24 @@ public class DetailActivity extends AppCompatActivity {
             }
             case(CHOOSE_LOCATION_REQUEST): {
                 if(resultCode != RESULT_CANCELED) {
-                    String coordinates = iData.getStringExtra("coordinates");
-                    String radius = Integer.toString(iData.getIntExtra("radius", 50));
-                    Uri selectedImageUri = Uri.parse(iData.getStringExtra("replacement"));
-                    dh.enableLocationLock(data.get(pos).getOriginalUrl(), coordinates, getPath(selectedImageUri), radius);
-                    Intent resultIntent = new Intent();
-                    setResult(Activity.RESULT_OK, resultIntent);
-                    finish();
+                    if(isNetworkAvailable(this)) {
+                        String coordinates = iData.getStringExtra("coordinates");
+                        String radius = Integer.toString(iData.getIntExtra("radius", 100));
+                        Uri selectedImageUri = Uri.parse(iData.getStringExtra("replacement"));
+                        dh.enableLocationLock(data.get(pos).getOriginalUrl(), coordinates, getPath(selectedImageUri), radius);
+                        Intent resultIntent = new Intent();
+                        resultIntent.putExtra("result", true);
+                        setResult(Activity.RESULT_OK, resultIntent);
+                        finish();
+                    }
+                    else {
+                        Toast.makeText(this, getString(R.string.InternetNotAvailable), Toast.LENGTH_LONG).show();
+                    }
                 }
                 break;
             }
             case(ENABLE_LOCATION_REQUEST): {
                 checkLocationOn();
-
                 break;
             }
         }
@@ -322,8 +362,6 @@ public class DetailActivity extends AppCompatActivity {
 
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 2400, 0, locationListener);
 
-            this.locationManager = locationManager;
-
             final String path = data.get(pos).getOriginalUrl();
             final ProgressDialog progress = new ProgressDialog(this);
             progress.setTitle(getString(R.string.PleaseWaitTitle));
@@ -337,21 +375,22 @@ public class DetailActivity extends AppCompatActivity {
                     // Do something after 5s = 5000ms
                     progress.dismiss();
                     if (myLocation != null) {
-                        Toast.makeText(getApplicationContext(), "Location found!", Toast.LENGTH_LONG).show();
                         String latitude = Double.toString(myLocation.getLatitude());
                         String longitude = Double.toString(myLocation.getLongitude());
                         String coordinates = latitude + ":" + longitude;
                         boolean result = dh.checkUnlockLocation(coordinates, path);
                         if (result) {
+                            Toast.makeText(getApplicationContext(), getString(R.string.SuccessUnlockLocTitle), Toast.LENGTH_LONG).show();
                             Intent resultIntent = new Intent();
+                            resultIntent.putExtra("result", true);
                             setResult(Activity.RESULT_OK, resultIntent);
                             finish();
                         }
                         else {
-                            Toast.makeText(getApplicationContext(), "Not within location!", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), getString(R.string.FailUnlockLoc), Toast.LENGTH_LONG).show();
                         }
                     } else {
-                        Toast.makeText(getApplicationContext(), "No location!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), getString(R.string.CantFindLoc), Toast.LENGTH_LONG).show();
                     }
                 }
             }, 5000);
@@ -423,6 +462,8 @@ public class DetailActivity extends AppCompatActivity {
         private static final String ARG_IMG_TITLE = "image_title";
         private static final String ARG_IMG_URL = "image_url";
 
+        private static View a;
+
         @Override
         public void setArguments(Bundle args) {
             super.setArguments(args);
@@ -449,39 +490,10 @@ public class DetailActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onStart() {
-            super.onStart();
-            Log.d(TAG, "onStart() called");
-        }
-
-        @Override
         public void onSaveInstanceState(Bundle savedInstanceState) {
             super.onSaveInstanceState(savedInstanceState);
             savedInstanceState.putString("url", this.url);
             Log.i(TAG, "onSaveInstanceState");
-        }
-
-        @Override
-        public void onPause() {
-            super.onPause();
-            Log.d(TAG, "onPause() called");
-        }
-
-        @Override
-        public void onResume() {
-            super.onResume();
-            Log.d(TAG, "onResume() called");
-        }
-        @Override
-        public void onStop() {
-            super.onStop();
-            Log.d(TAG, "onStop() called");
-        }
-
-        @Override
-        public void onDestroy() {
-            super.onDestroy();
-            Log.d(TAG, "onDestroy() called");
         }
 
         @Override
@@ -494,6 +506,8 @@ public class DetailActivity extends AppCompatActivity {
             }
 
             View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
+
+            a = rootView;
 
             final ImageView imageView = (ImageView) rootView.findViewById(R.id.detail_image);
 

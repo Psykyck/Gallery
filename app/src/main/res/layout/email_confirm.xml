@@ -7,7 +7,6 @@
     android:padding="20dip"
     android:textSize="15.5sp">
 
-
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -52,15 +51,11 @@
         android:layout_weight="1"
         android:gravity="center|bottom">
 
-
-
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/emlCancel"
-            android:text="CANCEL" />
-
-
+            android:id="@+id/emlOk"
+            android:text="OK"/>
     </LinearLayout>
 
     <LinearLayout
@@ -72,9 +67,8 @@
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/emlOk"
-            android:text="OK"/>
-
+            android:id="@+id/emlCancel"
+            android:text="CANCEL" />
     </LinearLayout>
 
 </LinearLayout>

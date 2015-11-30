@@ -36,9 +36,11 @@ public class DatabaseHelper {
     private static final String ENABLE_LOCK_PIN = "UPDATE " + PHOTOS_TABLE + " SET pinLock=1 WHERE path=?";
     private static final String ENABLE_LOCK_LOCATION = "UPDATE " + PHOTOS_TABLE + " SET locationLock=1 WHERE path=?";
     private static final String DISABLE_LOCK_LOCATION = "UPDATE " + PHOTOS_TABLE + " SET locationLock=0 WHERE path=?";
+    private static final String DISABLE_LOCK_PIN = "UPDATE " + PHOTOS_TABLE + " SET pinLock=0 WHERE path=?";
     private static final String SET_PIN_REPLACEMENT_PHOTO = "UPDATE " + PIN_TABLE + " SET replacementFK=?, passcode=? WHERE originalFK=?";
     private static final String SET_LOC_REPLACEMENT_PHOTO = "UPDATE " + LOCATION_TABLE + " SET radius = ?, coordinates=?, replacementFK=? WHERE originalFK=?";
     private static final String UNLOCK_LOC_REPLACEMENT_PHOTO = "UPDATE " + LOCATION_TABLE + " SET replacementFK=? WHERE originalFK=?";
+    private static final String UNLOCK_PIN_REPLACEMENT_PHOTO = "UPDATE " + PIN_TABLE + " SET replacementFK=? WHERE originalFK=?";
 
     public DatabaseHelper(Context context) {
         this.context = context;
@@ -119,6 +121,30 @@ public class DatabaseHelper {
         cursor.close();
         //Update thumbnail
         Cursor cursor2 = db.rawQuery(SET_PIN_REPLACEMENT_PHOTO, new String[]{String.valueOf(returnID(replacementPath)), UUID.randomUUID().toString(), String.valueOf(returnID(filePath))});
+        cursor2.moveToFirst();
+        cursor2.close();
+    }
+
+    public String getPinUUID(String origFilePath) {
+        String UUID = "";
+        Cursor cursor = this.db.query(PIN_TABLE, new String[]{"passcode"}, "originalFK = '" + String.valueOf(returnID(origFilePath)) + "'", null, null, null, null);
+        if (cursor.moveToFirst()) {
+            UUID = cursor.getString(0);
+        }
+        if (!cursor.isClosed()) {
+            cursor.close();
+        }
+        return UUID;
+    }
+
+    public void unlockPin(String origFilePath) {
+        Cursor cursor1 = db.rawQuery(DISABLE_LOCK_PIN, new String[]{origFilePath});
+        cursor1.moveToFirst();
+        cursor1.close();
+
+        String id = String.valueOf(returnID(origFilePath));
+
+        Cursor cursor2 = db.rawQuery(UNLOCK_PIN_REPLACEMENT_PHOTO, new String[]{id, id});
         cursor2.moveToFirst();
         cursor2.close();
     }

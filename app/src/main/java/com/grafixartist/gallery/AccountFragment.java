@@ -40,16 +40,16 @@ public class AccountFragment extends Fragment implements OnClickListener {
         String confirm	= etConfirm.getText().toString();
         this.dh = new DatabaseHelper(this.getContext());
         if (email.equals("")&& this.dh.checkUsernameExists(email)) {
-            Toast.makeText(this.getActivity(), "Username already exists", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this.getActivity(), "Username already exists", Toast.LENGTH_LONG).show();
         }
         else if (email.length() < 6) {
-            Toast.makeText(this.getActivity(), "Username must be at least 6 characters", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this.getActivity(), "Username must be at least 6 characters", Toast.LENGTH_LONG).show();
         }
         else if((password.equals(""))||(confirm.equals(""))){
-            Toast.makeText(AccountFragment.this.getActivity(), "Password or Confirm Password must not be blank", Toast.LENGTH_SHORT).show();
+            Toast.makeText(AccountFragment.this.getActivity(), "Password or Confirm Password must not be blank", Toast.LENGTH_LONG).show();
         }
         else if (password.length() < 5){
-            Toast.makeText(this.getActivity(), "Password must be at least 5 characters", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this.getActivity(), "Password must be at least 5 characters", Toast.LENGTH_LONG).show();
         }
         else if(!password.equals(confirm)){
             new AlertDialog.Builder(this.getActivity())
@@ -60,12 +60,12 @@ public class AccountFragment extends Fragment implements OnClickListener {
                     }).show();
         }
         else if (!isValidEmail(email)) {
-            Toast.makeText(this.getActivity(), "Not a valid email address", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this.getActivity(), "Not a valid email address", Toast.LENGTH_LONG).show();
         }
         else {
             this.dh = new DatabaseHelper(this.getActivity());
             this.dh.insert(email, password);
-            Toast.makeText(this.getActivity(), "Successfully created account", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this.getActivity(), "Successfully created account", Toast.LENGTH_LONG).show();
             getActivity().finish();
         }
     }

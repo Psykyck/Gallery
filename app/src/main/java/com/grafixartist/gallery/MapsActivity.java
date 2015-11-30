@@ -54,7 +54,7 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
 
     private boolean useMarkerClicked = false;
 
-    private int radius = 50;
+    private int radius = 100;
 
     private static final int CHOOSE_IMAGE_REQUEST = 1;
 
@@ -216,13 +216,8 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
                 };
 
                 if (location != null) {
-                    //PLACE THE INITIAL MARKER
                     drawMarker(location);
                 }
-//            else {
-//                location = mMap.getMyLocation();
-//                drawMarker(location);
-//            }
                 locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 0, locationListener);
             }
         }
@@ -410,7 +405,7 @@ public class MapsActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         final ArrayList<String> numbersAsStrings = new ArrayList<>();
 
         for (int i = 1; i <= 10; i++) {
-            numbersAsStrings.add(String.valueOf(i * 50));
+            numbersAsStrings.add(String.valueOf(i * 100));
         }
 
         final NumberPicker numberPicker = new NumberPicker(this);

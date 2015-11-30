@@ -35,21 +35,22 @@ public class ChangePassword extends AppCompatActivity {
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        EditText pwd = (EditText) findViewById(R.id.old_pwd);
-                        ChangePassword.this.dh = new DatabaseHelper(ChangePassword.this);
+                        String pwd = ((EditText) findViewById(R.id.old_pwd)).getText().toString();
+                        dh = new DatabaseHelper(ChangePassword.this);
                         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 
-                        EditText newP1 = (EditText) findViewById(R.id.new_pwd1);
-                        EditText newP2 = (EditText) findViewById(R.id.new_pwd2);
+                        String newP1 = ((EditText) findViewById(R.id.new_pwd1)).getText().toString();
+                        String newP2 = ((EditText) findViewById(R.id.new_pwd2)).getText().toString();
 
-                        if (!(pwd.getText().toString().equals(ChangePassword.this.dh.selectFirst(settings.getString(OPT_EMAIL, ""), pwd.getText().toString())))) {
-                            Toast.makeText(ChangePassword.this, "Current Password Incorrect", Toast.LENGTH_SHORT).show();
-                        } else if (!(newP1.getText().toString().equals(newP2.getText().toString()))) {
-                            Toast.makeText(ChangePassword.this, "Passwords Do Not Match", Toast.LENGTH_SHORT).show();
+                        if (!(pwd.equals(dh.selectFirst(settings.getString(OPT_EMAIL, ""), pwd)))) {
+                            Toast.makeText(ChangePassword.this, "Current Password Incorrect", Toast.LENGTH_LONG).show();
+                        } else if (newP1.length() < 5) {
+                            Toast.makeText(getApplicationContext(), "Password must be at least 5 characters", Toast.LENGTH_LONG).show();
+                        } else if (!newP1.equals(newP2)) {
+                            Toast.makeText(ChangePassword.this, "Passwords Do Not Match", Toast.LENGTH_LONG).show();
                         } else {
-
-                            ChangePassword.this.dh.updatePassword(settings.getString(OPT_EMAIL, ""), newP1.getText().toString());
-                            Toast.makeText(ChangePassword.this, "Password Updated", Toast.LENGTH_SHORT).show();
+                            dh.updatePassword(settings.getString(OPT_EMAIL, ""), newP1);
+                            Toast.makeText(ChangePassword.this, "Password Updated", Toast.LENGTH_LONG).show();
                             finish();
                         }
                     }

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -28,9 +29,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static int x = 0;
 
-    private static final String TAG = "MainActivity";
-
     private static final int LOCK_UNLOCK_ACTION = 1;
+
+    private final String PREFS_NAME = "MyPrefsFile";
 
     ArrayList<ImageModel> data = new ArrayList<>();
 
@@ -39,7 +40,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "onCreate() called");
         setContentView(R.layout.activity_main);
 
         setUpImageModels(MainActivity.this);
@@ -73,48 +73,13 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, iData);
         switch (requestCode) {
             case(LOCK_UNLOCK_ACTION): {
-                if(resultCode != RESULT_CANCELED) {
+                if(resultCode != RESULT_CANCELED && iData.getBooleanExtra("result", false)) {
                     finish();
                     startActivity(getIntent());
                 }
                 break;
             }
         }
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        super.onSaveInstanceState(savedInstanceState);
-        Log.i(TAG, "onSaveInstanceState");
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart() called");
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        Log.d(TAG, "onPause() called");
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume() called");
-    }
-    @Override
-    public void onStop() {
-        super.onStop();
-        Log.d(TAG, "onStop() called");
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy() called");
     }
 
     @Override
@@ -131,13 +96,10 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Intent i = new Intent(MainActivity.this, AppPreferences.class);
             startActivity(i);
-            finish();
-        }
-        if (id == R.id.action_sort) {
+        } else if (id == R.id.action_sort) {
             final CharSequence[] items = {"Date", "Name", "Size"};
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -154,6 +116,12 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog alert = builder.create();
             alert.show();
             return true;
+        } else if (id == R.id.action_logout) {
+            SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+            settings.edit().putBoolean("first_time_login", true).apply();
+            Intent i = new Intent(this, Login.class);
+            startActivity(i);
+            finish();
         }
 
         return id == R.id.action_logout || super.onOptionsItemSelected(item);

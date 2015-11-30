@@ -54,7 +54,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>	
             <Button
-                android:id="@+id/cancel_button"
+                android:id="@+id/clear_button"
                 android:text="Clear"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>

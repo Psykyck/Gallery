@@ -10,11 +10,10 @@ public class ImageModel implements Parcelable {
 
     String name, url, originalUrl;
 
-    public ImageModel() {
-
-    }
+    public ImageModel() {}
 
     protected ImageModel(Parcel in) {
+        // Set up properties
         name = in.readString();
         url = in.readString();
         originalUrl = in.readString();
@@ -63,6 +62,7 @@ public class ImageModel implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        // Write properties of parcel
         dest.writeString(name);
         dest.writeString(url);
         dest.writeString(originalUrl);

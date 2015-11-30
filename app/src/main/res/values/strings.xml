@@ -34,7 +34,6 @@
     <string name="Yes">Yes</string>
     <string name="No">No</string>
     <string name="Okay">OK</string>
-    <string name="SuccessUnlockLocTitle">Successfully Unlocked!</string>
     <string name="SuccessUnlockLocMessage">Location was within unlock radius</string>
     <string name="PleaseWaitTitle">Please Wait</string>
     <string name="SearchingLocation">Searching for location…</string>

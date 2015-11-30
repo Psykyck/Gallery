@@ -28,6 +28,7 @@ public class AccountFragment extends Fragment implements OnClickListener {
         etPassword= (EditText)v.findViewById(R.id.password);
         etConfirm = (EditText)v.findViewById(R.id.password_confirm);
         View btnAdd= v.findViewById(R.id.done_button);
+        // Set on click listeners
         btnAdd.setOnClickListener(this); 
         View btnCancel= v.findViewById(R.id.cancel_button);
         btnCancel.setOnClickListener(this);
@@ -35,36 +36,45 @@ public class AccountFragment extends Fragment implements OnClickListener {
     }
 
     private void CreateAccount(){
+        // Get email, password, and confirmation password
     	String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString();
         String confirm	= etConfirm.getText().toString();
-        this.dh = new DatabaseHelper(this.getContext());
-        if (email.equals("")&& this.dh.checkUsernameExists(email)) {
-            Toast.makeText(this.getActivity(), "Username already exists", Toast.LENGTH_LONG).show();
+        // Grab instance of databasehelper for DB access
+        this.dh = new DatabaseHelper(getContext());
+        // Check if email entered is empty
+        if(email.equals("")) {
+            Toast.makeText(this.getActivity(), "Please enter an email", Toast.LENGTH_LONG).show();
         }
-        else if (email.length() < 6) {
-            Toast.makeText(this.getActivity(), "Username must be at least 6 characters", Toast.LENGTH_LONG).show();
+        // Check if email already exists
+        else if (this.dh.checkEmailExists(email)) {
+            Toast.makeText(this.getActivity(), "Email already exists", Toast.LENGTH_LONG).show();
         }
+        // Check password fields are not empty
         else if((password.equals(""))||(confirm.equals(""))){
             Toast.makeText(AccountFragment.this.getActivity(), "Password or Confirm Password must not be blank", Toast.LENGTH_LONG).show();
         }
+        // Check password is at least 5 characters
         else if (password.length() < 5){
             Toast.makeText(this.getActivity(), "Password must be at least 5 characters", Toast.LENGTH_LONG).show();
         }
+        // Check password is equal to confirmation password
         else if(!password.equals(confirm)){
             new AlertDialog.Builder(this.getActivity())
                     .setTitle("Error")
                     .setMessage("Passwords do not match")
                     .setNeutralButton("Try Again", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {}
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
                     }).show();
         }
+        // Check email is in valid format
         else if (!isValidEmail(email)) {
-            Toast.makeText(this.getActivity(), "Not a valid email address", Toast.LENGTH_LONG).show();
+            Toast.makeText(this.getActivity(), "Email address is not in valid format", Toast.LENGTH_LONG).show();
         }
         else {
-            this.dh = new DatabaseHelper(this.getActivity());
-            this.dh.insert(email, password);
+            // Create new account using email and password and exit activity back to login
+            dh.insert(email, password);
             Toast.makeText(this.getActivity(), "Successfully created account", Toast.LENGTH_LONG).show();
             getActivity().finish();
         }
@@ -76,10 +86,12 @@ public class AccountFragment extends Fragment implements OnClickListener {
 
     public void onClick(View v) {
 		switch (v.getId()) {
+        // If create button is pressed, send to create account method
   		case R.id.done_button:
 		    CreateAccount();
 		    break;
-		case R.id.cancel_button:
+        // If clear button is pressed, clear text fields
+		case R.id.clear_button:
 			etEmail.setText("");
 	        etPassword.setText("");
 	        etConfirm.setText("");

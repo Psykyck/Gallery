@@ -27,11 +27,11 @@ public class Account extends FragmentActivity implements OnClickListener {
         // Install the Account fragment
         // For Android 3.0 and above comment out the line below
         FragmentManager fragmentManager = getSupportFragmentManager();
-        // For Android 3.0 and above uncomment the line below
-        // FragmentManager fragmentManager = getFragmentManager();
+
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
  
         fragmentTransaction.add(R.id.accountdetails, accountFragment);
+
         fragmentTransaction.commit();
         
         // Initialize the Exit button
@@ -41,6 +41,7 @@ public class Account extends FragmentActivity implements OnClickListener {
 
     public void onClick(View v) {
 		switch (v.getId()) {
+        // Exit activity if exit button pressed
 		case R.id.exit_button:
 		   	finish();
 	    	break;

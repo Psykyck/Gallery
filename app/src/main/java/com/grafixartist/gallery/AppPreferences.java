@@ -12,6 +12,7 @@ public class AppPreferences extends PreferenceActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Opens settings menu
         addPreferencesFromResource(R.xml.adv_settings);
     }
 }

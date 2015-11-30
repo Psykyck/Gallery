@@ -10,6 +10,7 @@ public class Image {
     private String dateTaken;
 
     public Image(String path, String name, String size, String dateTaken){
+        // Set up image class
         this.name = name;
         this.path = path;
         this.size = size;
@@ -17,6 +18,7 @@ public class Image {
     }
 
     public Image(){
+        // Default initialize image
         this.name = "";
         this.path = "";
         this.size = "";

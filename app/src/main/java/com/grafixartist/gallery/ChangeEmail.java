@@ -20,15 +20,18 @@ public class ChangeEmail extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Set view for the change email screen
         setContentView(R.layout.email_confirm);
 
         Button cancelButton = (Button)findViewById(R.id.emlCancel);
         Button okButton = (Button)findViewById(R.id.emlOk);
 
+        // Set on click listener for cancel and okay button
         cancelButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        // If pressed, exit activity
                         finish();
                     }
                 });
@@ -37,22 +40,33 @@ public class ChangeEmail extends AppCompatActivity{
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        EditText pwd = (EditText)findViewById(R.id.cureml_pwd);
+                        // First get password entered from view
+                        String pwd = ((EditText)findViewById(R.id.cureml_pwd)).getText().toString();
+                        // Make instance of DB
                         dh = new DatabaseHelper(ChangeEmail.this);
+                        // Find shared preferences file
                         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 
+                        // Get email and confirmation
                         EditText newE1 = (EditText)findViewById(R.id.new_email1);
                         EditText newE2 = (EditText)findViewById(R.id.new_email2);
                         String newEmail1 = newE1.getText().toString();
                         String newEmail2 = newE2.getText().toString();
 
+                        // Check if either emails given are invalid
                         if(!isValidEmail(newEmail1) || !isValidEmail(newEmail2)) {
                             Toast.makeText(getApplicationContext(), "Email not in valid format", Toast.LENGTH_LONG).show();
-                        } else if(!(pwd.getText().toString().equals(dh.selectFirst(settings.getString(OPT_EMAIL, ""), pwd.getText().toString())))) {
+                        }
+                        // Check if password equals the password of the current account
+                        else if(!(pwd.equals(dh.selectFirst(settings.getString(OPT_EMAIL, ""), pwd)))) {
                             Toast.makeText(getApplicationContext(), "Current Password Incorrect", Toast.LENGTH_LONG).show();
-                        } else if (!(newEmail1.equals(newEmail2))) {
+                        }
+                        // Check email is same as confirmation
+                        else if (!(newEmail1.equals(newEmail2))) {
                             Toast.makeText(getApplicationContext(), "Emails Do Not Match", Toast.LENGTH_LONG).show();
-                        } else {
+                        }
+                        else {
+                            // Update email of current account and reapply email in shared preferences file. Then exit activity
                             dh.updateEmail(settings.getString(OPT_EMAIL, ""), newEmail1);
                             settings.edit().putString(OPT_EMAIL, newEmail1).apply();
                             Toast.makeText(ChangeEmail.this, "Email Updated to " + settings.getString(OPT_EMAIL, "FAILED"), Toast.LENGTH_SHORT).show();

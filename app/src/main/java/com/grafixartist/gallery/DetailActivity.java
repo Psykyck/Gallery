@@ -70,14 +70,17 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Set up view for detail activity
         setContentView(R.layout.activity_detail);
 
         toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
         setSupportActionBar(toolbar);
 
+        // Get data and position index of photo clicked
         data = getIntent().getParcelableArrayListExtra("data");
         pos = getIntent().getIntExtra("pos", 0);
 
+        // Set the title from data
         setTitle(data.get(pos).getName());
 
         // Create the adapter that will return a fragment for each of the three
@@ -90,6 +93,7 @@ public class DetailActivity extends AppCompatActivity {
         mViewPager.setAdapter(mSectionsPagerAdapter);
         mViewPager.setCurrentItem(pos);
 
+        // Add on page change listener to detail image
         mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -115,13 +119,15 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreateContextMenu(menu, v, menuInf);
         getMenuInflater().inflate(R.menu.context_menu, menu);
 
-        //menu.setHeaderTitle("Sort By");
+        // Retrieve menu items
         MenuItem lockPass = menu.findItem(R.id.action_lock_pass);
         MenuItem lockLoc = menu.findItem(R.id.action_lock_loc);
         MenuItem unlock = menu.findItem(R.id.action_unlock);
 
+        // Check if any locks are placed on photo
         boolean checkPinLock = dh.checkPinLock(data.get(pos).getOriginalUrl()) || dh.checkLocLock(data.get(pos).getOriginalUrl());
 
+        // Enable and disable accordingly. Set visibility accordingly as well
         lockPass.setEnabled(!checkPinLock);
         lockLoc.setEnabled(!checkPinLock);
         unlock.setEnabled(checkPinLock);
@@ -135,16 +141,20 @@ public class DetailActivity extends AppCompatActivity {
     public boolean onContextItemSelected(MenuItem item) {
         this.dh = new DatabaseHelper(this);
 
+        // Get id of the context menu item selected
         int id = item.getItemId();
         //Lock photo by password
         if (id == R.id.action_lock_pass) {
+            // Start intent to choose replacement image
             Intent i = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(i, CHOOSE_IMAGE_REQUEST);
             return true;
         }
         //Lock photo by location
         if (id == R.id.action_lock_loc) {
+            // Check network connection is available
             if(isNetworkAvailable(this)) {
+                // Start activity to proceed with location lock
                 Intent gps = new Intent(this, MapsActivity.class);
                 startActivityForResult(gps, CHOOSE_LOCATION_REQUEST);
             }
@@ -155,9 +165,13 @@ public class DetailActivity extends AppCompatActivity {
         }
         //Unlock photo
         if (id == R.id.action_unlock) {
+            // Check photo is locked by pin
             if (dh.checkPinLock(data.get(pos).getOriginalUrl())) {
+                // Check network connection is available
                 if(isNetworkAvailable(this)) {
+                    // Fetch pin for given photo
                     final String UUID = dh.getPinUUID(data.get(pos).getOriginalUrl());
+                    // Run asynchronous thread to send email to user with retrieved pin
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
@@ -174,30 +188,39 @@ public class DetailActivity extends AppCompatActivity {
                         }
                     }).start();
 
+                    // Set up layout inflater to create alert dialog
                     LayoutInflater layoutInflater = LayoutInflater.from(this);
 
+                    // Get view from inflating with pin unlock layout
                     View pinUnlockView = layoutInflater.inflate(R.layout.pin_unlock, null);
 
+                    // Create alert dialog builder
                     AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
+                    // Set with pin unlock view
                     alertDialogBuilder.setView(pinUnlockView);
 
+                    // Grab input from edit text field
                     final EditText input = (EditText) pinUnlockView.findViewById(R.id.pin_input);
 
                     alertDialogBuilder
+                            // Can't cancel outside of dialog
                             .setCancelable(false)
+                            // Set on click listener for okay button
                             .setPositiveButton(getString(R.string.Okay), new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int id) {
-                                    // get user input and set it to result
-                                    if(input.getText().toString().trim().equals(UUID)) {
+                                    // Check pin from edit text field is equal to pin retrieved from db
+                                    if (input.getText().toString().trim().equals(UUID)) {
                                         Toast.makeText(getApplicationContext(), getString(R.string.SuccessUnlocked), Toast.LENGTH_LONG).show();
+                                        // Unlock the photo
                                         dh.unlockPin(data.get(pos).getOriginalUrl());
+                                        // Make new intent to return to main activity screen
                                         Intent resultIntent = new Intent();
                                         resultIntent.putExtra("result", true);
                                         setResult(Activity.RESULT_OK, resultIntent);
+                                        // Exit activity
                                         finish();
-                                    }
-                                    else {
+                                    } else {
                                         Toast.makeText(getApplicationContext(), getString(R.string.FailUnlockPin), Toast.LENGTH_LONG).show();
                                     }
                                 }
@@ -205,13 +228,19 @@ public class DetailActivity extends AppCompatActivity {
                             .setNegativeButton(getString(R.string.Cancel),
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog,	int id) {
+                                            // Cancel out of dialog
                                             dialog.cancel();
                                         }
                                     });
+                    // Create and show dialog
                     alertDialogBuilder.create().show();
+                }
+                else {
+                    Toast.makeText(this, getString(R.string.InternetNotAvailable), Toast.LENGTH_LONG).show();
                 }
             }
             else {
+                // Check location is on
                 checkLocationOn();
             }
             return true;
@@ -230,10 +259,14 @@ public class DetailActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent iData) {
         super.onActivityResult(requestCode, resultCode, iData);
         switch (requestCode) {
+            // Case where image request was made
             case(CHOOSE_IMAGE_REQUEST): {
+                // Check it was a success
                 if(resultCode != RESULT_CANCELED) {
+                    // Get selected replacement photo and enable pin lock on photo
                     Uri selectedImageUri = iData.getData();
                     dh.enablePinLock(data.get(pos).getOriginalUrl(), getPath(selectedImageUri));
+                    // Create intent to return to main screen and finish activity
                     Intent resultIntent = new Intent();
                     resultIntent.putExtra("result", true);
                     setResult(Activity.RESULT_OK, resultIntent);
@@ -241,13 +274,19 @@ public class DetailActivity extends AppCompatActivity {
                 }
                 break;
             }
+            // Case where location request was given back
             case(CHOOSE_LOCATION_REQUEST): {
+                // Check if result was success
                 if(resultCode != RESULT_CANCELED) {
+                    // Check network connection is available
                     if(isNetworkAvailable(this)) {
+                        // Get coordinates, radius, and selected replacement image
                         String coordinates = iData.getStringExtra("coordinates");
                         String radius = Integer.toString(iData.getIntExtra("radius", 100));
                         Uri selectedImageUri = Uri.parse(iData.getStringExtra("replacement"));
+                        // Enable location lock for photo
                         dh.enableLocationLock(data.get(pos).getOriginalUrl(), coordinates, getPath(selectedImageUri), radius);
+                        // Create intent to return to main screen and finish activity
                         Intent resultIntent = new Intent();
                         resultIntent.putExtra("result", true);
                         setResult(Activity.RESULT_OK, resultIntent);
@@ -259,7 +298,9 @@ public class DetailActivity extends AppCompatActivity {
                 }
                 break;
             }
+            // Return from location settings activity
             case(ENABLE_LOCATION_REQUEST): {
+                // Check location again
                 checkLocationOn();
                 break;
             }
@@ -270,37 +311,45 @@ public class DetailActivity extends AppCompatActivity {
         int locationMode = 0;
         String locationProviders;
 
+        // Check sdk version of device is kit kat and above
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
             try {
+                // Check location mode is on or off
                 locationMode = Settings.Secure.getInt(getContentResolver(), Settings.Secure.LOCATION_MODE);
             } catch (Settings.SettingNotFoundException e) {
                 e.printStackTrace();
             }
+            // If off, direct to gps dialog to enable it
             if(locationMode == Settings.Secure.LOCATION_MODE_OFF) {
                 enableGPSDialog();
             }
             else {
+                // Otherwise, enable current location
                 enableMyLocation();
             }
         } else{
+            // Get location providers
             locationProviders = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
             if(!TextUtils.isEmpty(locationProviders)) {
+                // No location providers, so need to turn on gps
                 enableGPSDialog();
             }
             else {
+                // Location is on, so go to enable location
                 enableMyLocation();
             }
         }
     }
 
     private void enableGPSDialog() {
-        // notify user
+        // notify user that gps is not turned on
         AlertDialog.Builder dialog = new AlertDialog.Builder(this);
         dialog.setTitle(getString(R.string.gps_not_enabled_title));
         dialog.setMessage(getString(R.string.gps_not_enabled_message));
         dialog.setPositiveButton(getString(R.string.open_location_settings), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                // Send user to settings to turn on location
                 Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 startActivityForResult(myIntent, ENABLE_LOCATION_REQUEST);
             }
@@ -322,6 +371,7 @@ public class DetailActivity extends AppCompatActivity {
      * Enables the My Location layer if the fine location permission has been granted.
      */
     private void enableMyLocation() {
+        // Check permission is granted for access to fine location
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             // Permission to access the location is missing.
@@ -334,73 +384,85 @@ public class DetailActivity extends AppCompatActivity {
             Location location = locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
             LocationListener locationListener = new LocationListener() {
                 public void onLocationChanged(Location location) {
-                    // redraw the marker when get location update.
+                    // Update current location when location update is received
                     myLocation = location;
                 }
-
                 @Override
                 public void onStatusChanged(String provider, int status, Bundle extras) {
                 }
-
                 @Override
                 public void onProviderEnabled(String provider) {
                 }
-
                 @Override
                 public void onProviderDisabled(String provider) {
                 }
             };
 
+            // If location was found, bookmark it
             if (location != null) {
                 myLocation = location;
             }
 
+            // Ask for location updates every 2.4 seconds
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 2400, 0, locationListener);
 
-            final String path = data.get(pos).getOriginalUrl();
-            final ProgressDialog progress = new ProgressDialog(this);
-            progress.setTitle(getString(R.string.PleaseWaitTitle));
-            progress.setMessage(getString(R.string.SearchingLocation));
-            progress.setCancelable(false);
-            progress.show();
-            final Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    // Do something after 5s = 5000ms
-                    progress.dismiss();
-                    if (myLocation != null) {
-                        String latitude = Double.toString(myLocation.getLatitude());
-                        String longitude = Double.toString(myLocation.getLongitude());
-                        String coordinates = latitude + ":" + longitude;
-                        boolean result = dh.checkUnlockLocation(coordinates, path);
-                        if (result) {
-                            Toast.makeText(getApplicationContext(), getString(R.string.SuccessUnlockLocTitle), Toast.LENGTH_LONG).show();
-                            Intent resultIntent = new Intent();
-                            resultIntent.putExtra("result", true);
-                            setResult(Activity.RESULT_OK, resultIntent);
-                            finish();
-                        }
-                        else {
-                            Toast.makeText(getApplicationContext(), getString(R.string.FailUnlockLoc), Toast.LENGTH_LONG).show();
-                        }
-                    } else {
-                        Toast.makeText(getApplicationContext(), getString(R.string.CantFindLoc), Toast.LENGTH_LONG).show();
-                    }
-                }
-            }, 5000);
-
+            // Proceed to find current location and check unlock status
+            findLocationAndCheck();
         }
     }
 
-/**
- * helper to retrieve the path of an image URI
- */
+    public void findLocationAndCheck() {
+        // Get original photo path of specified image
+        final String path = data.get(pos).getOriginalUrl();
+        // Set up progress dialog for finding location and further unlocking photo
+        final ProgressDialog progress = new ProgressDialog(this);
+        progress.setTitle(getString(R.string.PleaseWaitTitle));
+        progress.setMessage(getString(R.string.SearchingLocation));
+        progress.setCancelable(false);
+        progress.show();
+        final Handler handler = new Handler();
+        // Set up handler to delay by 5 seconds for a location lock on
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // Do something after 5s = 5000ms
+                progress.dismiss();
+                // Check if current location was found
+                if (myLocation != null) {
+                    // Fetch coordinates from current location
+                    String latitude = Double.toString(myLocation.getLatitude());
+                    String longitude = Double.toString(myLocation.getLongitude());
+                    String coordinates = latitude + ":" + longitude;
+                    // Check if unlocking by location was success
+                    boolean result = dh.checkUnlockLocation(coordinates, path);
+                    if (result) {
+                        Toast.makeText(getApplicationContext(), getString(R.string.SuccessUnlocked), Toast.LENGTH_LONG).show();
+                        // Successful unlock. Return to main activity screen
+                        Intent resultIntent = new Intent();
+                        resultIntent.putExtra("result", true);
+                        setResult(Activity.RESULT_OK, resultIntent);
+                        finish();
+                    }
+                    else {
+                        Toast.makeText(getApplicationContext(), getString(R.string.FailUnlockLoc), Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    Toast.makeText(getApplicationContext(), getString(R.string.CantFindLoc), Toast.LENGTH_LONG).show();
+                }
+            }
+        }, 5000);
+    }
+
+    /**
+     * Helper to retrieve the path of an image URI
+     */
     public String getPath(Uri uri) {
+        // Check empty URI is given
         if( uri == null ) {
             return null;
         }
         String[] projection = { MediaStore.Images.Media.DATA };
+        // Make query for the given uri
         Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
         if( cursor != null ){
             int column_index = cursor
@@ -457,8 +519,6 @@ public class DetailActivity extends AppCompatActivity {
         private static final String ARG_IMG_TITLE = "image_title";
         private static final String ARG_IMG_URL = "image_url";
 
-        private static View a;
-
         @Override
         public void setArguments(Bundle args) {
             super.setArguments(args);
@@ -487,6 +547,7 @@ public class DetailActivity extends AppCompatActivity {
         @Override
         public void onSaveInstanceState(Bundle savedInstanceState) {
             super.onSaveInstanceState(savedInstanceState);
+            // Save url of fragment
             savedInstanceState.putString("url", this.url);
             Log.i(TAG, "onSaveInstanceState");
         }
@@ -496,16 +557,17 @@ public class DetailActivity extends AppCompatActivity {
                                  Bundle savedInstanceState) {
             Log.d(TAG, "onCreateView() called");
 
+            // If url is not found, then update from savedInstanceState
             if(this.url == null) {
                 this.url = savedInstanceState.getString("url");
             }
 
+            // Create and inflate view for fragment detail image
             View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
-
-            a = rootView;
 
             final ImageView imageView = (ImageView) rootView.findViewById(R.id.detail_image);
 
+            // Register context menu for image view
             registerForContextMenu(imageView);
 
             Glide.with(getActivity()).load(url).thumbnail(0.1f).into(imageView);

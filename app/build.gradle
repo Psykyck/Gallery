@@ -31,4 +31,7 @@ dependencies {
     compile files('C:/Users/Andy/AndroidStudioProjects/Gallery/libs/activation.jar')
     compile files('C:/Users/Andy/AndroidStudioProjects/Gallery/libs/additionnal.jar')
     compile files('C:/Users/Andy/AndroidStudioProjects/Gallery/libs/mail.jar')
+    compile files('C:/Users/Andy/StudioProjects/Gallery/libs/activation.jar')
+    compile files('C:/Users/Andy/StudioProjects/Gallery/libs/additionnal.jar')
+    compile files('C:/Users/Andy/StudioProjects/Gallery/libs/mail.jar')
 }

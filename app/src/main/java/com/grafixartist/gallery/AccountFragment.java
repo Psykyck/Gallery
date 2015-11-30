@@ -30,7 +30,7 @@ public class AccountFragment extends Fragment implements OnClickListener {
         View btnAdd= v.findViewById(R.id.done_button);
         // Set on click listeners
         btnAdd.setOnClickListener(this); 
-        View btnCancel= v.findViewById(R.id.cancel_button);
+        View btnCancel= v.findViewById(R.id.clear_button);
         btnCancel.setOnClickListener(this);
         return v;
     }

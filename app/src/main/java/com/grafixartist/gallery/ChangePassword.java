@@ -47,8 +47,12 @@ public class ChangePassword extends AppCompatActivity {
                         String newP1 = ((EditText) findViewById(R.id.new_pwd1)).getText().toString();
                         String newP2 = ((EditText) findViewById(R.id.new_pwd2)).getText().toString();
 
+                        // Check current password is given
+                        if(pwd.equals("")) {
+                            Toast.makeText(ChangePassword.this, "Enter the current password for this account", Toast.LENGTH_LONG).show();
+                        }
                         // Check if current password is same as password of current account
-                        if (!(pwd.equals(dh.selectFirst(settings.getString(OPT_EMAIL, ""), pwd)))) {
+                        else if (!(pwd.equals(dh.selectFirst(settings.getString(OPT_EMAIL, ""), pwd)))) {
                             Toast.makeText(ChangePassword.this, "Current Password Incorrect", Toast.LENGTH_LONG).show();
                         }
                         // Check if new password is at least 5 characters

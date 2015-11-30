@@ -53,8 +53,12 @@ public class ChangeEmail extends AppCompatActivity{
                         String newEmail1 = newE1.getText().toString();
                         String newEmail2 = newE2.getText().toString();
 
+                        // Check if current password is given
+                        if(pwd.equals("")) {
+                            Toast.makeText(getApplicationContext(), "Enter the current password for this account", Toast.LENGTH_LONG).show();
+                        }
                         // Check if either emails given are invalid
-                        if(!isValidEmail(newEmail1) || !isValidEmail(newEmail2)) {
+                        else if(!isValidEmail(newEmail1) || !isValidEmail(newEmail2)) {
                             Toast.makeText(getApplicationContext(), "Email not in valid format", Toast.LENGTH_LONG).show();
                         }
                         // Check if password equals the password of the current account

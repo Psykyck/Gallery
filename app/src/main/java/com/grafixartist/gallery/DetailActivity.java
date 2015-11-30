@@ -178,7 +178,7 @@ public class DetailActivity extends AppCompatActivity {
                             SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
                             String email = settings.getString(EMAIL, "");
                             try {
-                                GMailSender sender = new GMailSender(getString(R.string.GalleryEmail),
+                                GmailSender sender = new GmailSender(getString(R.string.GalleryEmail),
                                         getString(R.string.GalleryPass));
                                 sender.sendMail(getString(R.string.EmailSubject), getString(R.string.EmailMessage) + UUID,
                                         getString(R.string.GalleryEmail), email);

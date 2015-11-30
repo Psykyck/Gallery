@@ -15,7 +15,7 @@ import java.io.OutputStream;
 import java.security.Security;
 import java.util.Properties;
 
-public class GMailSender extends javax.mail.Authenticator {
+public class GmailSender extends javax.mail.Authenticator {
     private String mailhost = "smtp.gmail.com";
     private String user;
     private String password;
@@ -25,10 +25,12 @@ public class GMailSender extends javax.mail.Authenticator {
         Security.addProvider(new JSSEProvider());
     }
 
-    public GMailSender(String user, String password) {
+    public GmailSender(String user, String password) {
+        // Set user and password of GMailSender
         this.user = user;
         this.password = password;
 
+        // Set up properties
         Properties props = new Properties();
         props.setProperty("mail.transport.protocol", "smtp");
         props.setProperty("mail.host", mailhost);
@@ -49,11 +51,13 @@ public class GMailSender extends javax.mail.Authenticator {
 
     public synchronized void sendMail(String subject, String body, String sender, String recipients) throws Exception {
         try{
+            // Set up intent to send mail and send it
             MimeMessage message = new MimeMessage(session);
             DataHandler handler = new DataHandler(new ByteArrayDataSource(body.getBytes(), "text/plain"));
             message.setSender(new InternetAddress(sender));
             message.setSubject(subject);
             message.setDataHandler(handler);
+            // Check number of recipients
             if (recipients.indexOf(',') > 0)
                 message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipients));
             else

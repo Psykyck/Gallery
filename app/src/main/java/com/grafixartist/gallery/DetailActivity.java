@@ -138,13 +138,8 @@ public class DetailActivity extends AppCompatActivity {
         int id = item.getItemId();
         //Lock photo by password
         if (id == R.id.action_lock_pass) {
-            if(isNetworkAvailable(this)) {
-                Intent i = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(i, CHOOSE_IMAGE_REQUEST);
-            }
-            else {
-                Toast.makeText(this, getString(R.string.InternetNotAvailable), Toast.LENGTH_LONG).show();
-            }
+            Intent i = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(i, CHOOSE_IMAGE_REQUEST);
             return true;
         }
         //Lock photo by location

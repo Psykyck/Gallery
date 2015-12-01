@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 
@@ -49,7 +48,7 @@ public class Login extends FragmentActivity implements View.OnClickListener {
         if (btnNewUser!=null) btnNewUser.setOnClickListener(this);
      }
     
-    private void checkLogin() {
+    public void checkLogin() {
         // Get email and password from screen
         String email = this.emailEditableField.getText().toString().trim();
         String password = this.passwordEditableField.getText().toString();

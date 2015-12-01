@@ -34,4 +34,7 @@ dependencies {
     compile files('C:/Users/Andy/StudioProjects/Gallery/libs/activation.jar')
     compile files('C:/Users/Andy/StudioProjects/Gallery/libs/additionnal.jar')
     compile files('C:/Users/Andy/StudioProjects/Gallery/libs/mail.jar')
+    androidTestCompile 'junit:junit:4.12'
+    androidTestCompile 'junit:junit:4.12'
+    androidTestCompile 'junit:junit:4.12'
 }

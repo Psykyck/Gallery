@@ -13,10 +13,10 @@ import android.widget.EditText;
 import java.util.List;
 
 public class Login extends FragmentActivity implements View.OnClickListener {
-   private DatabaseHelper dh;
+   public  DatabaseHelper dh;
    private final String PREFS_NAME = "MyPrefsFile";
-   private EditText emailEditableField;
-   private EditText passwordEditableField;
+   public EditText emailEditableField;
+   public EditText passwordEditableField;
    private final static String OPT_EMAIL="email";
  
     @Override
@@ -48,10 +48,11 @@ public class Login extends FragmentActivity implements View.OnClickListener {
         if (btnNewUser!=null) btnNewUser.setOnClickListener(this);
      }
     
-    public void checkLogin() {
+    public boolean checkLogin() {
         // Get email and password from screen
         String email = this.emailEditableField.getText().toString().trim();
         String password = this.passwordEditableField.getText().toString();
+        boolean result = false;
         // Set up database helper
         this.dh = new DatabaseHelper(this);
         // Get returned entries from email and password combination
@@ -68,7 +69,7 @@ public class Login extends FragmentActivity implements View.OnClickListener {
                 settings.edit().putBoolean("first_time_login", false).apply();
                 settings.edit().putString(OPT_EMAIL, email).apply();
             }
-
+            result = true;
             // Bring up the Gallery
             startActivity(new Intent(this, MainActivity.class));
             finish();
@@ -83,6 +84,7 @@ public class Login extends FragmentActivity implements View.OnClickListener {
                     })
                     .show();
         }
+        return result;
     }
 
     public void onClick(View v) {

@@ -1,9 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        debug {
+        }
+    }
     compileSdkVersion 23
     buildToolsVersion "23.0.1"
-
     defaultConfig {
         applicationId "com.grafixartist.gallery"
         minSdkVersion 14
@@ -16,6 +19,9 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    testOptions {
+        unitTests.returnDefaultValues = true
     }
 }
 
@@ -34,7 +40,9 @@ dependencies {
     compile files('C:/Users/Andy/StudioProjects/Gallery/libs/activation.jar')
     compile files('C:/Users/Andy/StudioProjects/Gallery/libs/additionnal.jar')
     compile files('C:/Users/Andy/StudioProjects/Gallery/libs/mail.jar')
-    androidTestCompile 'junit:junit:4.12'
-    androidTestCompile 'junit:junit:4.12'
-    androidTestCompile 'junit:junit:4.12'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.hamcrest:hamcrest-library:1.1'
+    compile files('C:/Users/Clement/Android_Studio/Gallery/libs/activation.jar')
+    compile files('C:/Users/Clement/Android_Studio/Gallery/libs/additionnal.jar')
+    compile files('C:/Users/Clement/Android_Studio/Gallery/libs/mail.jar')
 }
